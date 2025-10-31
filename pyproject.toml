@@ -1,5 +1,5 @@
 [project]
-name = "aw-timeblock"
+name = "aw-nextblock"
 version = "0.1.0"
 description = ""
 authors = [
@@ -9,14 +9,16 @@ readme = "README.md"
 requires-python = ">=3.13,<4.0"
 dependencies = [
     "pyyaml (>=6.0.3,<7.0.0)",
-    "aw-client (>=0.5.15,<0.6.0)"
+    "aw-client (>=0.5.15,<0.6.0)",
+    "click (>=8.3.0,<9.0.0)",
+    
 ]
 
 [project.scripts]
-aw-timeblock = "aw_timeblock.main:main"
+aw-nextblock = "aw_nextblock.__main__:main"
 
 [tool.poetry]
-packages = [{include = "aw_timeblock", from = "src"}]
+packages = [{include = "aw_nextblock", from = "src"}]
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
