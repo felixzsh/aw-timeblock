@@ -9,7 +9,6 @@ from pathlib import Path
 
 def get_config_dir() -> Path:
     system = platform.system()
-
     if system == "Linux":
         base_dir = Path.home() / ".config" / "aw-timeblock"
     elif system == "Darwin":
@@ -18,7 +17,6 @@ def get_config_dir() -> Path:
         base_dir = Path(os.environ["APPDATA"]) / "aw-timeblock"
     else:
         base_dir = Path.home() / ".aw-timeblock"
-
     base_dir.mkdir(parents=True, exist_ok=True)
     return base_dir
 
@@ -40,22 +38,17 @@ class ServerConfig:
 class AppConfig:
     server: ServerConfig
     notifications: NotificationConfig
-
     def __post_init__(self):
         self.server = self.server or ServerConfig()
         self.notifications = self.notifications or NotificationConfig()
 
 def _load_config() -> Optional[AppConfig]:
     config_file = get_config_dir() / "config.toml"
-
-
     if not config_file.exists():
         return None
-
     try:
         with open(config_file, 'rb') as f:
             data = tomllib.load(f)
-
         return AppConfig(
             server=ServerConfig(**data.get('server', {})),
             notifications=NotificationConfig(**data.get('notifications', {}))

@@ -36,14 +36,14 @@ def _serialize_session_state(state: SessionState) -> dict:
     return {
         "name": state.name,
         "current_block_idx": state.current_block_idx,
-        "started_at": _serialize_datetime(state.started_at),
-        "finished_at": _serialize_datetime(state.finished_at),
+        "start_dt": _serialize_datetime(state.start_dt),
+        "end_dt": _serialize_datetime(state.end_dt),
         "blocks": [
             {
                 "name": block.name,
                 "planned_duration": block.planned_duration,
-                "started_at": _serialize_datetime(block.started_at) if block.started_at else None,
-                "finished_at": _serialize_datetime(block.finished_at) if block.finished_at else None
+                "start_dt": _serialize_datetime(block.start_dt) if block.start_dt else None,
+                "end_dt": _serialize_datetime(block.end_dt) if block.end_dt else None
             }
             for block in state.blocks
         ]
@@ -55,16 +55,16 @@ def _deserialize_session_state(data: dict) -> SessionState:
         blocks.append(TimeBlock(
             name=block_data["name"],
             planned_duration=block_data["planned_duration"],
-            started_at=_deserialize_datetime(block_data["started_at"]) if block_data["started_at"] else None,
-            finished_at=_deserialize_datetime(block_data["finished_at"]) if block_data["finished_at"] else None
+            start_dt=_deserialize_datetime(block_data["start_dt"]) if block_data["start_dt"] else None,
+            end_dt=_deserialize_datetime(block_data["end_dt"]) if block_data["end_dt"] else None
         ))
     
     return SessionState(
         name=data["name"],
         blocks=blocks,
         current_block_idx=int(data["current_block_idx"]),
-        started_at=_deserialize_datetime(data["started_at"]),
-        finished_at=_deserialize_datetime(data["finished_at"])
+        start_dt=_deserialize_datetime(data["start_dt"]),
+        end_dt=_deserialize_datetime(data["end_dt"])
     )
 
 def get_state_path() -> Path:
