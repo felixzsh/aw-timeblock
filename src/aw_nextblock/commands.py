@@ -1,8 +1,11 @@
 import click
 from pathlib import Path
+import signal
+import sys
 
 from .config import config
 from . import __version__
+from .main_loop import MainLoop
 
 @click.group()
 def cli():
@@ -13,7 +16,27 @@ def cli():
 @click.argument('plan_file', type=click.Path(exists=True, path_type=Path))
 def start(plan_file: Path):
     """Start a new work session from a plan file"""
-    pass
+    # TODO: Load and validate the plan file
+    
+    # Create and run the main loop
+    main_loop = MainLoop()
+    
+    # Handle graceful shutdown
+    def signal_handler(signum, frame):
+        click.echo("\nStopping session...")
+        main_loop.stop()
+        sys.exit(0)
+    
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+    
+    click.echo(f"Starting session from {plan_file}")
+    click.echo("Press Ctrl+C to stop the session")
+    
+    try:
+        main_loop.run()
+    except KeyboardInterrupt:
+        click.echo("\nSession stopped")
 
 @cli.command()
 async def next():
