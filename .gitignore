@@ -1,0 +1,11 @@
+# .gitignore
+
+# Cache de Python
+__pycache__/
+*.py[cod]
+
+# Instalaciones de desarrollo
+build/
+
+pyrightconfig.json
+.mise.toml

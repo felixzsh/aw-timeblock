@@ -1,0 +1,23 @@
+[project]
+name = "aw-timeblock"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "felixzsh",email = "felix.sanchez.dev@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.13,<4.0"
+dependencies = [
+    "pyyaml (>=6.0.3,<7.0.0)",
+    "aw-client (>=0.5.15,<0.6.0)"
+]
+
+[project.scripts]
+aw-timeblock = "aw_timeblock.main:main"
+
+[tool.poetry]
+packages = [{include = "aw_timeblock", from = "src"}]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
