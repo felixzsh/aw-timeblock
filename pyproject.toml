@@ -15,10 +15,15 @@ dependencies = [
 ]
 
 [project.scripts]
-aw-nextblock = "aw_nextblock.__main__:main"
+aw-nextblock = "aw_nextblock.commands:cli"
+aw-watcher-nextblock = "aw_watcher_nextblock.__main__:main"
 
 [tool.poetry]
-packages = [{include = "aw_nextblock", from = "src"}]
+packages = [
+    {include = "aw_nextblock", from = "src"},
+    {include = "aw_watcher_nextblock", from = "src"},
+    {include = "shared", from = "src"}
+]
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
