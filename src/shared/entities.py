@@ -18,11 +18,6 @@ class TimeBlock:
     end_dt: Optional[datetime] = None
 
 
-@dataclass
-class SessionPlan:
-    name: str
-    blocks: List[TimeBlock]
-
 
 @dataclass
 class SessionState:
