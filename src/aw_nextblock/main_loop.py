@@ -2,6 +2,8 @@ import time
 from datetime import datetime
 from typing import Optional
 
+from .core import initialize_session_watcher, send_heartbeat
+
 
 class MainLoop:
     
@@ -9,9 +11,15 @@ class MainLoop:
         self.running = False
         self.cycle_count = 0
         self.start_time: Optional[datetime] = None
+        self.session_watcher_initialized = False
         
     def cycle(self) -> None:
-        pass
+        if not self.session_watcher_initialized:
+            initialize_session_watcher()
+            self.session_watcher_initialized = True
+        
+        send_heartbeat()
+        
     
     def run(self) -> None:
         self.running = True
@@ -21,10 +29,17 @@ class MainLoop:
         while self.running:
             cycle_start = time.time()
             
-            self.cycle()
+            try:
+                self.cycle()
+            except Exception as e:
+                print(f"Error in cycle {self.cycle_count}: {e}")
+            
             self.cycle_count += 1
+            
+            # Calculate precise timing for next cycle
             elapsed = time.time() - cycle_start
             sleep_time = max(0, 1.0 - elapsed)
+            
             if sleep_time > 0:
                 time.sleep(sleep_time)
     
