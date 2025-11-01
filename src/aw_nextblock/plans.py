@@ -5,8 +5,9 @@ from typing import Optional
 
 import yaml
 
-from .entities import SessionPlan, TimeBlock
-
+from shared import (
+    SessionPlan, TimeBlock
+)
 
 logger = logging.getLogger(__name__)
 
@@ -24,21 +25,17 @@ def load_session_plan(file_path_str: str) -> Optional[SessionPlan]:
     try:
         file_path = Path(file_path_str)
         
-        # Check if file exists
         if not file_path.exists():
             logger.error("Session plan file %s does not exist", file_path)
             return None
 
-        # Load and parse YAML
         with open(file_path, 'r', encoding='utf-8') as f:
             data = yaml.safe_load(f)
 
-        # Validate basic structure
         if not data or 'name' not in data:
             logger.error("Invalid YAML structure: missing 'name' field for session plan")
             return None
 
-        # Process time blocks with validation
         blocks = []
         for i, block_data in enumerate(data.get('blocks', [])):
             try:

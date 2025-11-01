@@ -1,15 +1,13 @@
 """Command-line interface for aw-nextblock."""
 import logging
-import signal
 import sys
 from pathlib import Path
 
 import click
 
-from .config import config
-from .core.plans import load_session_plan
+from shared import load_session_state, save_session_state, create_session_state, advance_session_state
+from .plans import load_session_plan
 from . import __version__
-from .main_loop import MainLoop
 
 
 logger = logging.getLogger(__name__)
@@ -21,11 +19,16 @@ def cli():
     pass
 
 
-@cli.command()
+@click.command()
 @click.argument('plan_file', type=click.Path(exists=True, path_type=Path))
 def start(plan_file: Path):
     """Start a new work session from a plan file"""
     click.echo(f"Loading session plan from {plan_file}")
+    
+    # Check if a session already exists
+    if load_session_state():
+        click.echo("A session is already running. Use 'next' to advance or delete the session state file manually.", err=True)
+        sys.exit(1)
     
     # Load and validate the plan file
     session_plan = load_session_plan(str(plan_file))
@@ -36,48 +39,74 @@ def start(plan_file: Path):
     click.echo(f"Loaded session: {session_plan.name}")
     click.echo(f"Found {len(session_plan.blocks)} time blocks")
     
-    # Create and run the main loop
-    main_loop = MainLoop(session_plan)
+    # Create and save the session state
+    session_state = create_session_state(
+        name=session_plan.name,
+        blocks=session_plan.blocks
+    )
     
-    # Handle graceful shutdown
-    def signal_handler(signum, frame):
-        click.echo("\nStopping session...")
-        main_loop.stop()
-        sys.exit(0)
-    
-    signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(signal.SIGTERM, signal_handler)
-    
-    click.echo(f"Starting session from {plan_file}")
-    click.echo("Press Ctrl+C to stop the session")
-    
-    try:
-        main_loop.run()
-    except KeyboardInterrupt:
-        click.echo("\nSession stopped")
+    if save_session_state(session_state):
+        click.echo(f"Session '{session_state.name}' started successfully!")
+        click.echo(f"Current block: {session_state.current_block.name if session_state.current_block else 'None'}")
+    else:
+        click.echo("Failed to save session state", err=True)
+        sys.exit(1)
 
 
-@cli.command()
-async def next():
+@click.command()
+def next():
     """Advance to the next time block"""
     click.echo("Advancing to next time block...")
-    # TODO: Implement next functionality
+    
+    session_state = load_session_state()
+    if not session_state or not session_state.is_active:
+        click.echo("No active session found. Start a session first with 'start <plan_file>'", err=True)
+        sys.exit(1)
+    
+    # Advance to next block
+    updated_state = advance_session_state(session_state)
+    
+    if save_session_state(updated_state):
+        if updated_state.is_active and updated_state.current_block:
+            click.echo(f"Moved to next block: {updated_state.current_block.name}")
+        elif not updated_state.is_active:
+            click.echo("All blocks completed. Session ended.")
+        else:
+            click.echo("Failed to advance to next block")
+    else:
+        click.echo("Failed to save session state", err=True)
+        sys.exit(1)
 
 
-@cli.command()
+@click.command()
 def status():
     """Show current session status"""
-    click.echo("Session status: Not implemented yet")
+    session_state = load_session_state()
+    if not session_state:
+        click.echo("No active session")
+        return
+    
+    click.echo(f"Session: {session_state.name}")
+    click.echo(f"Status: {session_state.status.value}")
+    click.echo(f"Current block: {session_state.current_block_idx + 1}/{len(session_state.blocks)}")
+    
+    if session_state.current_block:
+        click.echo(f"Block: {session_state.current_block.name}")
+        click.echo(f"Planned duration: {session_state.current_block.planned_duration} minutes")
+    
+    if session_state.start_dt:
+        elapsed_minutes = int(session_state.elapsed_time / 60)
+        click.echo(f"Elapsed time: {elapsed_minutes} minutes")
 
 
-@cli.command()
-def stop():
-    """Stop the current session"""
-    click.echo("Stopping session...")
-    # TODO: Implement stop functionality
-
-
-@cli.command()
+@click.command()
 def version():
     """Show version information"""
     click.echo(f"aw-nextblock v{__version__}")
+
+
+# Register commands
+cli.add_command(start)
+cli.add_command(next)
+cli.add_command(status)
+cli.add_command(version)

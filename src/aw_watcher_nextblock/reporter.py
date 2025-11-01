@@ -1,5 +1,5 @@
 """
-Session watcher for ActivityWatch integration.
+ActivityWatch reporter for aw-watcher-nextblock.
 
 Handles bucket initialization and sending heartbeat events based on
 the current session state. This module will be called from the main loop.
@@ -12,16 +12,16 @@ from typing import Optional
 from aw_core.models import Event
 from aw_client import ActivityWatchClient
 
-from .state import load_session_state
-from ..config import config
+from shared import load_session_state
+from shared.entities import SessionState
 
 
-class SessionWatcher:
-    """ActivityWatch session watcher for aw-nextblock."""
+class ActivityWatchReporter:
+    """ActivityWatch reporter for aw-watcher-nextblock."""
     
-    def __init__(self, client_name: str = "aw-nextblock"):
+    def __init__(self, client_name: str = "aw-watcher-nextblock"):
         """
-        Initialize the session watcher.
+        Initialize the ActivityWatch reporter.
         
         Args:
             client_name: Name for the ActivityWatch client
@@ -29,33 +29,45 @@ class SessionWatcher:
         self.client_name = client_name
         self.client: Optional[ActivityWatchClient] = None
         self.bucket_id: Optional[str] = None
+        self._initialized = False
         
     def initialize(self) -> bool:
         """
-        Initialize the ActivityWatch bucket.
+        Initialize the ActivityWatch bucket and client connection.
         
         Returns:
             True if initialization successful, False otherwise
         """
         try:
+            if self._initialized:
+                return True
+                
             self.client = ActivityWatchClient(self.client_name, testing=True)
             
             self.bucket_id = f"{self.client_name}_{self.client.client_hostname}"
             
             self.client.create_bucket(self.bucket_id, event_type="nextblock-session")
             
+            # Start the client connection for queued heartbeats
+            self.client.connect()
+            
+            self._initialized = True
             return True
             
         except Exception as e:
             print(f"Failed to initialize ActivityWatch client: {e}")
             return False
     
-    def send_heartbeat(self) -> bool:
+    def send_heartbeat(self, session_state: Optional[SessionState] = None) -> bool:
         """
         Send heartbeat based on current session state.
         
         This function should be called from the main loop cycle.
-        It loads the current state and sends appropriate heartbeat events.
+        It sends appropriate heartbeat events based on the provided session state.
+        
+        Args:
+            session_state: The session state to use for heartbeat data. If None,
+                          loads session state internally (for backward compatibility)
         
         Returns:
             True if heartbeat sent successfully, False otherwise
@@ -64,7 +76,9 @@ class SessionWatcher:
             return False
             
         try:
-            session_state = load_session_state()
+            # Load session state if not provided (backward compatibility)
+            if session_state is None:
+                session_state = load_session_state()
             
             if session_state is None:
                 heartbeat_data = {
@@ -77,7 +91,7 @@ class SessionWatcher:
                 
                 heartbeat_data = {
                     "session_name": session_state.name,
-                    "session_status": "active",
+                    "session_status": session_state.status.value,
                     "current_block_idx": session_state.current_block_idx,
                     "total_blocks": len(session_state.blocks),
                     "start_time": session_state.start_dt.isoformat() if session_state.start_dt else None,
@@ -110,41 +124,3 @@ class SessionWatcher:
                 self.client.disconnect()
             except Exception:
                 pass
-
-
-_session_watcher: Optional[SessionWatcher] = None
-
-
-def get_session_watcher() -> Optional[SessionWatcher]:
-    """Get the global session watcher instance."""
-    return _session_watcher
-
-
-def initialize_session_watcher() -> bool:
-    """
-    Initialize the global session watcher.
-    
-    Returns:
-        True if initialization successful, False otherwise
-    """
-    global _session_watcher
-    
-    _session_watcher = SessionWatcher()
-    return _session_watcher.initialize()
-
-
-def send_heartbeat() -> bool:
-    """
-    Send heartbeat using the global session watcher.
-    
-    This is the function that should be called from the main loop cycle.
-    
-    Returns:
-        True if heartbeat sent successfully, False otherwise
-    """
-    global _session_watcher
-    
-    if _session_watcher is None:
-        return False
-        
-    return _session_watcher.send_heartbeat()
