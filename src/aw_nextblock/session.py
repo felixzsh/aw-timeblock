@@ -70,7 +70,6 @@ class Session:
                     planned_duration=int(block_data['duration']),
                     start_dt=datetime.now()
                 ))
-
             return cls(
                 name=str(data['name']),
                 blocks=blocks,
@@ -147,7 +146,6 @@ def save_session(session: Session) -> bool:
     except Exception as e:
         logger.error(f"failed to save session {e}")
         return False
-
 
 def delete_session() -> bool:
     try:
