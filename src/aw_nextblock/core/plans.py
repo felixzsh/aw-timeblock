@@ -1,7 +1,14 @@
-from typing import Optional
-import yaml
+"""Session plan loading and validation functionality."""
+import logging
 from pathlib import Path
+from typing import Optional
+
+import yaml
+
 from .entities import SessionPlan, TimeBlock
+
+
+logger = logging.getLogger(__name__)
 
 
 def load_session_plan(file_path_str: str) -> Optional[SessionPlan]:
@@ -9,17 +16,17 @@ def load_session_plan(file_path_str: str) -> Optional[SessionPlan]:
     Load a YAML session plan file and deserialize it into a SessionPlan object.
 
     Args:
-        file_path: Path to the YAML session plan file
+        file_path_str: Path to the YAML session plan file
 
     Returns:
         SessionPlan object if successful, None if there's an error
     """
     try:
-
         file_path = Path(file_path_str)
+        
         # Check if file exists
         if not file_path.exists():
-            print(f"Session plan file {file_path} does not exist")
+            logger.error("Session plan file %s does not exist", file_path)
             return None
 
         # Load and parse YAML
@@ -28,7 +35,7 @@ def load_session_plan(file_path_str: str) -> Optional[SessionPlan]:
 
         # Validate basic structure
         if not data or 'name' not in data:
-            print("Invalid YAML structure: missing 'name' field for session plan")
+            logger.error("Invalid YAML structure: missing 'name' field for session plan")
             return None
 
         # Process time blocks with validation
@@ -36,7 +43,7 @@ def load_session_plan(file_path_str: str) -> Optional[SessionPlan]:
         for i, block_data in enumerate(data.get('blocks', [])):
             try:
                 if 'name' not in block_data or 'duration' not in block_data:
-                    print(f"Time block {i} is incomplete: missing 'name' or 'duration'")
+                    logger.warning("Time block %d is incomplete: missing 'name' or 'duration'", i)
                     continue
 
                 blocks.append(TimeBlock(
@@ -44,7 +51,7 @@ def load_session_plan(file_path_str: str) -> Optional[SessionPlan]:
                     planned_duration=int(block_data['duration'])
                 ))
             except (ValueError, TypeError) as e:
-                print(f"Error in time block {i}: {e}")
+                logger.error("Error in time block %d: %s", i, e)
                 continue
 
         return SessionPlan(
@@ -53,8 +60,8 @@ def load_session_plan(file_path_str: str) -> Optional[SessionPlan]:
         )
 
     except yaml.YAMLError as e:
-        print(f"YAML syntax error in session plan: {e}")
+        logger.error("YAML syntax error in session plan: %s", e)
     except Exception as e:
-        print(f"Unexpected error loading session plan: {e}")
+        logger.error("Unexpected error loading session plan: %s", e)
 
     return None
