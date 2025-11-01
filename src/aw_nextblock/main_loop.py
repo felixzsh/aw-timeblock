@@ -1,17 +1,24 @@
+"""Main loop for aw-nextblock session management."""
+import logging
 import time
 from datetime import datetime
 from typing import Optional
 
 from .core import initialize_session_watcher, send_heartbeat
+from .core.entities import SessionPlan
+
+
+logger = logging.getLogger(__name__)
 
 
 class MainLoop:
     
-    def __init__(self):
+    def __init__(self, session_plan: Optional[SessionPlan] = None):
         self.running = False
         self.cycle_count = 0
         self.start_time: Optional[datetime] = None
         self.session_watcher_initialized = False
+        self.session_plan = session_plan
         
     def cycle(self) -> None:
         if not self.session_watcher_initialized:
