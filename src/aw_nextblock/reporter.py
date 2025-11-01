@@ -4,7 +4,7 @@ from typing import Optional
 from aw_core.models import Event
 from aw_client import ActivityWatchClient
 
-from shared.entities import SessionState
+from aw_nextblock.session import Session
 
 logger = logging.getLogger(__name__)
 
@@ -30,15 +30,15 @@ class ActivityWatchReporter:
             logger.error(f"Failed to initialize aw client: {e}")
             return False
     
-    def send_heartbeat(self, session_state: SessionState) -> bool:
+    def send_heartbeat(self, session: Session) -> bool:
         if not self.client or not self.bucket_id:
             logger.warning("aw not intialized")
             return False
         try:
-            current_block = session_state.current_block
-            if session_state.is_active and current_block:
+            current_block = session.current_block
+            if session and current_block:
                 heartbeat_data = {
-                    "session": session_state.name,
+                    "session": session.name,
                     "block": current_block.name,
                     "planned_duration": current_block.planned_duration,
                 }
