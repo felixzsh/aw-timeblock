@@ -109,37 +109,6 @@ def save_session_state(state: SessionState) -> bool:
     except Exception:
         return False
 
-def create_session_state(name: str, blocks: list[TimeBlock]) -> SessionState:
-    """Create a new session state from a plan."""
-    return SessionState(
-        name=name,
-        blocks=blocks,
-        current_block_idx=0,
-        status=SessionStatus.ACTIVE,
-        start_dt=datetime.now()
-    )
-
-
-def advance_session_state(session_state: SessionState) -> SessionState:
-    """Advance the session state to the next block."""
-    # Mark current block as completed
-    if session_state.current_block:
-        session_state.blocks[session_state.current_block_idx].end_dt = datetime.now()
-    
-    # Move to next block
-    next_block_idx = session_state.current_block_idx + 1
-    
-    if next_block_idx < len(session_state.blocks):
-        # Start next block
-        session_state.current_block_idx = next_block_idx
-        session_state.blocks[next_block_idx].start_dt = datetime.now()
-    else:
-        # No more blocks, end session
-        session_state.status = SessionStatus.INACTIVE
-        session_state.end_dt = datetime.now()
-    
-    return session_state
-
 
 def delete_session_state() -> bool:
     try:

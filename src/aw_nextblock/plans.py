@@ -1,15 +1,21 @@
 """Session plan loading and validation functionality."""
 import logging
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
+from dataclasses import dataclass
 
 import yaml
 
-from shared import (
-    SessionPlan, TimeBlock
-)
+from shared import TimeBlock
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class SessionPlan:
+    name: str
+    blocks: List[TimeBlock]
+
 
 
 def load_session_plan(file_path_str: str) -> Optional[SessionPlan]:
