@@ -1,43 +1,95 @@
 # aw-nextblock
 
-**WIP** service for ActivityWatch
+**WIP** CLI tool and [ActivityWatch](https://activitywatch.net) watcher for timeblocking sessions
 
-## What is this?
+## Table of Contents
 
-aw-nextblock reimagines [time blocking](https://en.wikipedia.org/wiki/Timeblocking) by reducing your responsibility to a single action: deciding when to move to the next task.
+- [What is this](#what-is-this)
+- [What it offers](#what-it-offers)
+  - [Track Actual vs. Planned activity](#track-actual-vs-planned-activity)
+  - [Interactive Session](#interactive-session)
+  - [Session Review](#session-review)
+- [Why it's useful](#why-its-useful)
+- [Getting Started](#getting-started)
+  - [Main Components](#main-components)
+  - [Setup the watcher](#setup-the-watcher)
+  - [Control commands](#control-commands)
+  - [Triggering Next](#triggering-next)
+  - [Setup Custom Visualization](#setup-custom-visualization)
+  - [Usage](#usage)
+- [Installation](#installation)
+  - [Requirements](#requirements)
+- [Project Status](#project-status)
+- [Contributing](#contributing)
+- [License](#license)
+- [Related](#related)
 
-Traditional time blocking tools force you to manage timers, pause/resume tracking, and fight against rigid schedules. aw-nextblock takes a different approach: you create a plan with reasonable time estimates, start your session, and simply use [`next`](#triggering-next) when you're ready to move forward. The system handles time-aware notifications relative to your planned durations, keeping you conscious of time without being intrusive.
+---
 
-## Requirements
+## What is this
 
-- Python 3.13+
-- ActivityWatch (installed and running)
-- Linux/macOS/Windows
+aw-nextblock reimagines [time blocking](https://en.wikipedia.org/wiki/Timeblocking) by prioritizing realistic flexibility over rigid scheduling by proposing interactive work sessions where your **only** responsibility is decide **when** to advance to the `next` task. this approach gives insightful planned vs real activity data thanks to the [ActivityWatch](https://activitywatch.net) ecosystem.
 
-**Note:** Early development focuses on Linux. macOS and Windows support planned for first release.
+## What it offers
 
-## Installation
+### Track Actual vs. Planned activity
 
-In active development. Installation instructions coming with first release.
+aw-nextblock leverages automatic activity tracking (thanks [ActivityWatch](https://activitywatch.net) <3) and enrich that information with real work session timeblocks, where each one represents the time you actually spent (planned time is stored as metadata for custom visualization usage).
 
-## Core Philosophy
+### Interactive Session
 
-**Your only responsibility: decide when to advance.**
+During a work session, the only input needed by you is [`next`](#triggering-next), what is this ? For now is just a CLI command, but this means you can trigger it any way you want, however, i recommend the keybinding approach.
 
-You handle:
-- Creating work plans
-- Doing the work
-- Using [`next`](#triggering-next) to advance
+Session feedback is delivered via system notifications at configurable intervals: before, at, and after the planned duration of timeblocks.
 
-## How aw-nextblock works with ActivityWatch
+### Session Review
 
-ActivityWatch excels at tracking *what you're actually doing*. aw-nextblock complements this by telling ActivityWatch *what you intended to do*.
+A Custom visualization shows your planned blocks alongside actual activity data in a clear parallel-bar chart. See exactly what happened during each block and use these insights to improve your workflow.
 
-This service sends structured timeblock events to ActivityWatch, enriching your activity data with your intentional planning context.
+[image placeholder]
 
-## How it Works
 
-### 1. Define Your Plan
+## Why it's useful
+
+Traditional time blocking assumes perfect estimates and rigid adherence. Reality is messier, tasks take longer or shorter than expected, flow state matters, interruptions happen.
+
+aw-nextblock provides structure without rigidity. Plans are guides, not rules. You stay aware of time without being controlled by it. The visual analysis of your sessions helps you understand your work patterns and continuously improve your workflow.
+
+## Getting Started
+
+### Main Components
+
+- **`nextblock-ctl`**: Command-line tool for managing work sessions.
+- **`aw-watcher-nextblock`**: Background watcher that monitors session state.
+
+
+### Setup the watcher - **TBD**
+
+### Control commands
+
+Use `nextblock-ctl` for session management:
+
+```bash
+nextblock-ctl start <plan.yaml>    # Start a work session
+nextblock-ctl next                 # Move to next block
+nextblock-ctl status               # Check current status
+nextblock-ctl stop                 # Stop current session
+```
+
+### Triggering Next
+
+While you can run `nextblock-ctl next` from a terminal, the recommended approach is using a keybinding for instant access during your workflow.
+
+Example Hyprland keybinding:
+```
+bind = $mainMod ALT, N, exec, nextblock-ctl next
+```
+
+### Setup Custom Visualization - **TBD**
+
+### Usage
+
+#### 1. Define Your Plan
 
 Create a YAML file with your work session:
 
@@ -57,72 +109,58 @@ blocks:
 
 Durations are estimates, not limits.
 
-### 2. Start Your Session
+#### 2. Start Your Session
 
 ```bash
-aw-nextblock start plan.yaml
+nextblock-ctl start plan.yaml
 ```
 
-This initiates a monitoring process that tracks elapsed time to send notifications at key moments relative to your planned durations.
+This creates a session file that the watcher will monitor.
 
-### 3. Work and Advance
+#### 3. Work and Advance
 
 Focus on your current task. When ready to move forward:
 
 ```bash
-aw-nextblock next
+nextblock-ctl next
 ```
 
 See [Triggering Next](#triggering-next) for recommended setup.
 
+#### 4. Review Your Session
 
-### 4. Analyze with Custom Visualization
+After completing your work session, use the custom visualization in ActivityWatch's web UI to analyze your planned blocks against actual activity data.
 
-**TBD** - A custom visualization for ActivityWatch's web UI will display your planned blocks contrasted with actual activity data.
+## Installation
 
-## Notifications
+In active development. Installation instructions coming with first release.
 
-**TBD** - The notification system will keep you aware of time relative to your planned durations without being intrusive. Notifications will be configurable and triggered at key moments during each block.
+### Requirements
 
-## Commands
+- Python 3.13+
+- ActivityWatch (installed and running)
+- Linux/macOS/Windows
 
-```bash
-aw-nextblock start <plan.yaml>    # Start a work session
-aw-nextblock next                 # Move to next block
-aw-nextblock status               # Check current status
-aw-nextblock stop                 # Stop current session
-```
-
-## Triggering Next
-
-While you can run `aw-nextblock next` from a terminal, the recommended approach is using a keybinding for instant access during your workflow.
-
-Example Hyprland keybinding:
-```
-bind = $mainMod ALT, N, exec, aw-nextblock next
-```
-
-## Why This Approach?
-
-Traditional time blocking assumes perfect estimates and rigid adherence. Reality is messier: tasks take longer or shorter than expected, flow state matters, interruptions happen.
-
-aw-nextblock provides structure without rigidity. Plans are guides, not rules. You stay aware of time without being controlled by it.
+**Note:** Early development focuses on Linux. macOS and Windows support planned for first release.
 
 ## Project Status
 
-### Milestone 1: Core Functionality
+### Milestone 1: core CLI
 - [x] YAML plan parsing
-- [ ] Configuration file loading
 - [x] Session state management
-- [x] Basic CLI commands (`start`, `next`, `status`)
-- [x] ActivityWatch client integration
+- [x] Basic CLI commands (`start`, `next`, `status`, `stop`) via `nextblock-ctl`
 
-### Milestone 2: Time Awareness
-- [ ] Background time monitoring
-- [ ] Notification system implementation
+### Milestone 2: Watcher Implementation
+- [ ] Config file/args loading
+- [ ] Main monitor loop
+- [ ] aw-client intgration
+
+### Milestone 3: Notifications
+- [ ] Define triggers
+- [ ] implementation in watcher loop
 - [ ] Configurable notification triggers
 
-### Milestone 3: Polish & Visualization
+### Milestone 4: Custom Visualization
 - [ ] Define visualization approach for contrasting data
 - [ ] Implement custom ActivityWatch visualization
 
