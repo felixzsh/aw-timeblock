@@ -113,9 +113,9 @@ aw-nextblock provides structure without rigidity. Plans are guides, not rules. Y
 ### Milestone 1: Core Functionality
 - [x] YAML plan parsing
 - [ ] Configuration file loading
-- [ ] Session state management
-- [ ] Basic CLI commands (`start`, `next`, `status`, `stop`)
-- [ ] ActivityWatch client integration
+- [x] Session state management
+- [x] Basic CLI commands (`start`, `next`, `status`)
+- [x] ActivityWatch client integration
 
 ### Milestone 2: Time Awareness
 - [ ] Background time monitoring
