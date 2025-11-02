@@ -15,8 +15,8 @@ dependencies = [
 ]
 
 [project.scripts]
-nextblock-ctl = "aw_nextblock.cli:cli"
-aw-watcher-nextblock = "aw_nextblock.__main__:main"
+nextblock-ctl = "aw_nextblock:cli"
+aw-watcher-nextblock = "aw_nextblock:main"
 
 [tool.poetry]
 packages = [
