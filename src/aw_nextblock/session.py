@@ -5,6 +5,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
 from aw_core.dirs import get_cache_dir
+import os
+import tempfile
 import logging
 
 logger = logging.getLogger(__name__)
@@ -124,6 +126,8 @@ def _deserialize(data: dict) -> Session:
         start_dt=_deserialize_datetime(data["start_dt"]),
     )
 
+#TODO raise respective errors instead of returning None
+# and no not handle errors here, let the propagate
 def load_session() -> Optional[Session]:
     session_path = get_session_path()
     if not session_path.exists():
@@ -140,11 +144,18 @@ def save_session(session: Session) -> bool:
     try:
         session_path = get_session_path()
         session_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(session_path, 'w') as f:
-            json.dump(_serialize(session), f, indent=2, ensure_ascii=False)
+        with tempfile.NamedTemporaryFile(
+            mode='w', 
+            delete=False,
+            dir=session_path.parent,
+            suffix='.tmp'
+        ) as tmp_file:
+            json.dump(_serialize(session), tmp_file, indent=2, ensure_ascii=False)
+            temp_path = tmp_file.name
+        os.replace(temp_path, session_path)
         return True
     except Exception as e:
-        logger.error(f"failed to save session {e}")
+        logger.error(f"Failed to save session: {e}")
         return False
 
 def delete_session() -> bool:
