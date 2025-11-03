@@ -70,7 +70,6 @@ class Session:
                 blocks.append(TimeBlock(
                     name=str(block_data['name']),
                     planned_duration=int(block_data['duration']),
-                    start_dt=datetime.now()
                 ))
             return cls(
                 name=str(data['name']),

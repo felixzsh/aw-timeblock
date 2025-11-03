@@ -2,6 +2,7 @@
 import logging
 import sys
 from pathlib import Path
+from datetime import datetime
 import click
 
 from .session import Session, session_exists, save_session, load_session, delete_session
@@ -31,7 +32,8 @@ def start(plan_file: Path):
 
     click.echo(f"Loaded session: {session.name}")
     click.echo(f"Found {len(session.blocks)} time blocks")
-
+    if session.current_block:
+        session.current_block.start_dt = datetime.now()
 
     if save_session(session):
         click.echo(f"Session '{session.name}' started successfully!")
@@ -56,8 +58,10 @@ def next():
     next_block_idx = session.current_block_idx + 1
     if next_block_idx < len(session.blocks):
         session.current_block_idx = next_block_idx
-        if session.current_block and save_session(session):
-            click.echo(f"Moved to next block: {session.current_block.name}")
+        if session.current_block:
+            session.current_block.start_dt = datetime.now()
+            if save_session(session):
+                click.echo(f"Moved to next block: {session.current_block.name}")
         else:
             click.echo("Failed to save session state", err=True)
             sys.exit(1)
