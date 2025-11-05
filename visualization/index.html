@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>aw-watcher-nextblock</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: sans-serif;
+        }
+        #chartContainer {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        canvas {
+            max-width: 100%;
+            max-height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="chartContainer">
+        <canvas id="chart"></canvas>
+    </div>
+</body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+<script>
+    // A small hack to make the aw-client work in the browser without webpack
+    const exports = {};
+    function require(name) {
+        if (name === 'axios') {
+            return axios;
+        }
+        throw new Error(`Cannot find module '${name}'`);
+    }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/aw-client@0.3.4/out/aw-client.min.js"></script>
+<script defer>
+    const urlParams = new URLSearchParams(window.location.search);
+    const start = urlParams.get('start');
+    const end = urlParams.get('end');
+    const hostname = urlParams.get('hostname');
+
+    const client = new AWClient('aw-watcher-nextblock', { baseURL: window.location.origin });
+
+    // Color palette for categories
+    const colors = [
+        '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8',
+        '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B88B', '#ABEBC6',
+        '#F1948A', '#AED6F1', '#F5B041', '#D7BDE2', '#A9DFBF'
+    ];
+
+    function getColorForCategory(category, index) {
+        return colors[index % colors.length];
+    }
+
+    function formatDuration(seconds) {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const secs = Math.floor(seconds % 60);
+
+        if (hours > 0) {
+            return `${hours}h ${minutes}m`;
+        } else if (minutes > 0) {
+            return `${minutes}m ${secs}s`;
+        } else {
+            return `${secs}s`;
+        }
+    }
+
+    client.query([`${start}/${end}`], [`RETURN = limit_events(query_bucket("aw-watcher-nextblock_${hostname}"), 10000);`])
+        .then((awData) => {
+            // Group events by block
+            const blockMap = {};
+            const blockTimestamps = {};
+            
+            awData[0].forEach(event => {
+                const blockName = event.data.block || 'Unknown';
+                if (!blockMap[blockName]) {
+                    blockMap[blockName] = [];
+                    blockTimestamps[blockName] = new Date(event.timestamp).getTime();
+                }
+                blockMap[blockName].push(event);
+            });
+
+            // Process data for stacked bar chart - ordered by timestamp (oldest to newest)
+            const blockNames = Object.keys(blockMap).sort((a, b) => {
+                return blockTimestamps[a] - blockTimestamps[b];
+            });
+            const categorySet = new Set();
+            
+            // Collect all unique categories
+            blockNames.forEach(blockName => {
+                blockMap[blockName].forEach(event => {
+                    // Extract category from event data (could be app, window, etc.)
+                    const category = event.data.app || event.data.title || 'Other';
+                    categorySet.add(category);
+                });
+            });
+
+            const categories = Array.from(categorySet).sort();
+            
+            // Build datasets for each category
+            const datasets = categories.map((category, categoryIndex) => {
+                const data = blockNames.map(blockName => {
+                    const blockEvents = blockMap[blockName];
+                    const categoryDuration = blockEvents
+                        .filter(e => (e.data.app || e.data.title || 'Other') === category)
+                        .reduce((sum, e) => sum + e.duration, 0);
+                    return categoryDuration;
+                });
+
+                return {
+                    label: category,
+                    data: data,
+                    backgroundColor: getColorForCategory(category, categoryIndex),
+                    borderWidth: 0
+                };
+            });
+
+            // Create chart
+            const ctx = document.getElementById('chart').getContext('2d');
+            const chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: blockNames,
+                    datasets: datasets
+                },
+                options: {
+                    indexAxis: 'x',
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 2,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const duration = formatDuration(context.parsed.y);
+                                    return `${context.dataset.label}: ${duration}`;
+                                },
+                                title: function(context) {
+                                    return context[0].label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            stacked: true
+                        },
+                        y: {
+                            stacked: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return formatDuration(value);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Adjust chart to fit container without scrolling
+            const canvas = document.getElementById('chart');
+            const container = document.getElementById('chartContainer');
+            const blockCount = blockNames.length;
+            
+            // Get container dimensions
+            const containerWidth = container.clientWidth;
+            const containerHeight = container.clientHeight;
+            
+            // Calculate bar width to fit all blocks
+            const barWidth = Math.max(30, containerWidth / blockCount);
+            
+            // Set canvas dimensions to fit container
+            canvas.width = containerWidth;
+            canvas.height = containerHeight;
+            
+            chart.resize();
+        })
+        .catch((error) => {
+            console.error('Error fetching data:', error);
+            document.getElementById('chartContainer').innerHTML = `<p style="color: red; padding: 20px;">Error loading data: ${error.message}</p>`;
+        });
+</script>
+
+</html>
