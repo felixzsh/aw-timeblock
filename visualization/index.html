@@ -1,197 +1,362 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <title>aw-watcher-nextblock</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: sans-serif;
-        }
-        #chartContainer {
-            width: 100%;
-            height: 100%;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-        }
-        canvas {
-            max-width: 100%;
-            max-height: 100%;
-        }
-    </style>
-</head>
-
-<body>
-    <div id="chartContainer">
-        <canvas id="chart"></canvas>
-    </div>
-</body>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
-<script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Blocks Activity Chart</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.5.0/axios.min.js"></script>
+  <script>
     // A small hack to make the aw-client work in the browser without webpack
     const exports = {};
     function require(name) {
-        if (name === 'axios') {
-            return axios;
-        }
-        throw new Error(`Cannot find module '${name}'`);
+      if (name === 'axios') {
+        return axios;
+      }
+      throw new Error(`Cannot find module '${name}'`);
     }
-</script>
-<script src="https://cdn.jsdelivr.net/npm/aw-client@0.3.4/out/aw-client.min.js"></script>
-<script defer>
-    const urlParams = new URLSearchParams(window.location.search);
-    const start = urlParams.get('start');
-    const end = urlParams.get('end');
-    const hostname = urlParams.get('hostname');
-
-    const client = new AWClient('aw-watcher-nextblock', { baseURL: window.location.origin });
-
-    // Color palette for categories
-    const colors = [
-        '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8',
-        '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B88B', '#ABEBC6',
-        '#F1948A', '#AED6F1', '#F5B041', '#D7BDE2', '#A9DFBF'
-    ];
-
-    function getColorForCategory(category, index) {
-        return colors[index % colors.length];
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/aw-client@0.4.1/out/aw-client.min.js"></script>
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100vh;
+      overflow-y: auto;
+      overflow-x: hidden;
     }
 
+    #chart-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #chart {
+      display: none;
+      width: 100% !important;
+      height: 100% !important;
+      max-width: 100%;
+      max-height: 100%;
+    }
+
+    #no-data,
+    #loading {
+      text-align: center;
+      padding: 20px;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="chart-container">
+    <div id="no-data" style="display: none; font-size: 16pt; color: #aaa;">No data</div>
+    <div id="loading" style="display: block; font-size: 16pt; color: #aaa;">Loading...</div>
+    <canvas id="chart"></canvas>
+  </div>
+
+  <script>
+    // Format duration in seconds to human readable format
     function formatDuration(seconds) {
-        const hours = Math.floor(seconds / 3600);
-        const minutes = Math.floor((seconds % 3600) / 60);
-        const secs = Math.floor(seconds % 60);
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      const secs = Math.floor(seconds % 60);
 
-        if (hours > 0) {
-            return `${hours}h ${minutes}m`;
-        } else if (minutes > 0) {
-            return `${minutes}m ${secs}s`;
-        } else {
-            return `${secs}s`;
-        }
+      if (hours > 0) {
+        return `${hours}h ${minutes}m`;
+      } else if (minutes > 0) {
+        return `${minutes}m ${secs}s`;
+      } else {
+        return `${secs}s`;
+      }
     }
 
-    client.query([`${start}/${end}`], [`RETURN = limit_events(query_bucket("aw-watcher-nextblock_${hostname}"), 10000);`])
-        .then((awData) => {
-            // Group events by block
-            const blockMap = {};
-            const blockTimestamps = {};
-            
-            awData[0].forEach(event => {
-                const blockName = event.data.block || 'Unknown';
-                if (!blockMap[blockName]) {
-                    blockMap[blockName] = [];
-                    blockTimestamps[blockName] = new Date(event.timestamp).getTime();
-                }
-                blockMap[blockName].push(event);
-            });
+    async function getCategoriesAndColors(client) {
+      try {
+        const classes = await client.get_setting("classes");
+        const theme = await client.get_setting("theme");
 
-            // Process data for stacked bar chart - ordered by timestamp (oldest to newest)
-            const blockNames = Object.keys(blockMap).sort((a, b) => {
-                return blockTimestamps[a] - blockTimestamps[b];
-            });
-            const categorySet = new Set();
-            
-            // Collect all unique categories
-            blockNames.forEach(blockName => {
-                blockMap[blockName].forEach(event => {
-                    // Extract category from event data (could be app, window, etc.)
-                    const category = event.data.app || event.data.title || 'Other';
-                    categorySet.add(category);
-                });
-            });
+        // Helper function to find color by iterating up the hierarchy
+        function findColorInHierarchy(namePath, classes) {
+          // Start from the current level and go up the hierarchy
+          for (let i = namePath.length; i > 0; i--) {
+            const ancestorPath = namePath.slice(0, i).join(' > ');
+            const ancestorClass = classes.find(c => c.name.join(' > ') === ancestorPath);
+            if (ancestorClass && ancestorClass.data && ancestorClass.data.color) {
+              return ancestorClass.data.color;
+            }
+          }
+          return null;
+        }
 
-            const categories = Array.from(categorySet).sort();
-            
-            // Build datasets for each category
-            const datasets = categories.map((category, categoryIndex) => {
-                const data = blockNames.map(blockName => {
-                    const blockEvents = blockMap[blockName];
-                    const categoryDuration = blockEvents
-                        .filter(e => (e.data.app || e.data.title || 'Other') === category)
-                        .reduce((sum, e) => sum + e.duration, 0);
-                    return categoryDuration;
-                });
-
-                return {
-                    label: category,
-                    data: data,
-                    backgroundColor: getColorForCategory(category, categoryIndex),
-                    borderWidth: 0
-                };
-            });
-
-            // Create chart
-            const ctx = document.getElementById('chart').getContext('2d');
-            const chart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: blockNames,
-                    datasets: datasets
-                },
-                options: {
-                    indexAxis: 'x',
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    aspectRatio: 2,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const duration = formatDuration(context.parsed.y);
-                                    return `${context.dataset.label}: ${duration}`;
-                                },
-                                title: function(context) {
-                                    return context[0].label;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            stacked: true
-                        },
-                        y: {
-                            stacked: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return formatDuration(value);
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-
-            // Adjust chart to fit container without scrolling
-            const canvas = document.getElementById('chart');
-            const container = document.getElementById('chartContainer');
-            const blockCount = blockNames.length;
-            
-            // Get container dimensions
-            const containerWidth = container.clientWidth;
-            const containerHeight = container.clientHeight;
-            
-            // Calculate bar width to fit all blocks
-            const barWidth = Math.max(30, containerWidth / blockCount);
-            
-            // Set canvas dimensions to fit container
-            canvas.width = containerWidth;
-            canvas.height = containerHeight;
-            
-            chart.resize();
-        })
-        .catch((error) => {
-            console.error('Error fetching data:', error);
-            document.getElementById('chartContainer').innerHTML = `<p style="color: red; padding: 20px;">Error loading data: ${error.message}</p>`;
+        // Build colors dictionary: { "Category > Path": "#HEX" }
+        // Classes inherit color from any ancestor in the hierarchy
+        const colors = {};
+        classes.forEach(cls => {
+          const categoryPath = cls.name.join(' > ');
+          const inheritedColor = findColorInHierarchy(cls.name, classes);
+          if (inheritedColor) {
+            colors[categoryPath] = inheritedColor;
+          }
         });
-</script>
+
+        return {colors, theme};
+      } catch (error) {
+        console.error('Error loading categories and theme from client:', error);
+        return {
+          colors: {},
+          theme: 'light'
+        };
+      }
+    }
+
+    let categoryColors = {};
+
+    // Main function to load and render the chart
+    async function loadAndRenderChart() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const hostname = urlParams.get('hostname');
+      const start = urlParams.get('start');
+      const end = urlParams.get('end');
+
+      if (!hostname || !start || !end) {
+        console.error('Missing required URL parameters: hostname, start, end');
+        return;
+      }
+
+      // Create AW client
+      const client = new AWClient('aw-watcher-nextblock', {baseURL: window.location.origin});
+
+      try {
+        // Load colors and theme from client settings
+        const {colors, theme} = await getCategoriesAndColors(client);
+        categoryColors = colors; // Store colors globally for getCategoryColor()
+
+        // Apply theme to the page
+        const backgroundColor = theme === 'dark' ? '#1A1D24' : '#FFFFFF';
+        const textColor = theme === 'dark' ? '#FFFFFF' : '#000000';
+        document.body.style.backgroundColor = backgroundColor;
+        document.body.style.color = textColor;
+        document.getElementById('chart-container').style.backgroundColor = backgroundColor;
+
+        // Query nextblock events (task blocks)
+        const bid_nextblock = `aw-watcher-nextblock_${hostname}`;
+        const bid_afk = `aw-watcher-afk_${hostname}`;
+        const bid_window = `aw-watcher-window_${hostname}`;
+
+        // Get nextblock events to define blocks
+        const nextblockQuery = `RETURN = query_bucket("${bid_nextblock}");`;
+        const nextblockData = await client.query([`${start}/${end}`], [nextblockQuery]);
+        const nextblockEvents = nextblockData[0] || [];
+
+        if (nextblockEvents.length === 0) {
+          document.getElementById('no-data').style.display = 'block';
+          document.getElementById('loading').style.display = 'none';
+          return;
+        }
+
+        // Get window events and filter by non-afk
+        const windowQuery = `
+events = query_bucket("${bid_window}");
+afk_events = query_bucket("${bid_afk}");
+not_afk = filter_keyvals(afk_events, "status", ["not-afk"]);
+events = filter_period_intersect(events, not_afk);
+RETURN = events;
+        `;
+        const windowData = await client.query([`${start}/${end}`], [windowQuery]);
+        const windowEvents = windowData[0] || [];
+
+        // Get categories from classes
+        const classes = await client.get_setting("classes");
+
+        // Categorize window events
+        const categorizeQuery = `
+events = query_bucket("${bid_window}");
+afk_events = query_bucket("${bid_afk}");
+not_afk = filter_keyvals(afk_events, "status", ["not-afk"]);
+events = filter_period_intersect(events, not_afk);
+events = categorize(events, ${JSON.stringify(classes.map(cls => [cls.name, cls.rule]))});
+RETURN = events;
+        `;
+        const categorizedData = await client.query([`${start}/${end}`], [categorizeQuery]);
+        const categorizedEvents = categorizedData[0] || [];
+
+        // Group nextblock events by block name and sort by timestamp
+        const blockMap = {};
+        const blockTimestamps = {};
+
+        nextblockEvents.forEach(event => {
+          const blockName = event.data.block || 'Unknown';
+          if (!blockMap[blockName]) {
+            blockMap[blockName] = [];
+            blockTimestamps[blockName] = new Date(event.timestamp).getTime();
+          }
+          blockMap[blockName].push(event);
+        });
+
+        // Sort blocks by timestamp (oldest to newest)
+        const blockNames = Object.keys(blockMap).sort((a, b) => {
+          return blockTimestamps[a] - blockTimestamps[b];
+        });
+
+        const categorySet = new Set();
+        categorizedEvents.forEach(event => {
+          const category = event.data.$category ?
+            event.data.$category.join(' > ') :
+            'Uncategorized';
+          categorySet.add(category);
+        });
+
+        const categories = Array.from(categorySet).sort();
+
+        // Build datasets for each category
+        const datasets = categories.map(category => {
+          const data = blockNames.map(blockName => {
+            // Get time range for this block
+            const blockEvents = blockMap[blockName];
+            const blockStart = new Date(blockEvents[0].timestamp).getTime();
+            const blockEnd = blockStart + (blockEvents[0].duration * 1000);
+
+            return categorizedEvents
+              .filter(e => {
+                const eventCategory = e.data.$category ?
+                  e.data.$category.join(' > ') :
+                  'Uncategorized';
+                if (eventCategory !== category) return false;
+
+                const eventStart = new Date(e.timestamp).getTime();
+                const eventEnd = eventStart + (e.duration * 1000);
+
+                // Check if event overlaps with block
+                return eventStart < blockEnd && eventEnd > blockStart;
+              })
+              .reduce((sum, e) => sum + e.duration, 0);
+          });
+
+          return {
+            label: category,
+            data: data,
+            backgroundColor: getCategoryColor(category),
+            borderWidth: 0
+          };
+        });
+
+        if (datasets.length === 0) {
+          document.getElementById('no-data').style.display = 'block';
+          document.getElementById('loading').style.display = 'none';
+          return;
+        }
+
+        const gridColor = theme === 'dark' ? '#333333' : '#E0E0E0';
+        const tickColor = theme === 'dark' ? '#CCCCCC' : '#666666';
+
+        const chartOptions = {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  const duration = formatDuration(context.parsed.x);
+                  return `${context.dataset.label}: ${duration}`;
+                },
+                title: function (context) {
+                  return context[0].label;
+                }
+              }
+            },
+            legend: {
+              display: false,
+            },
+          },
+          scales: {
+            y: {
+              stacked: true,
+              grid: {
+                color: gridColor,
+              },
+              ticks: {
+                color: tickColor,
+                autoSkip: false,
+              },
+            },
+            x: {
+              stacked: true,
+              grid: {
+                color: gridColor,
+              },
+              ticks: {
+                callback: function (value) {
+                  return formatDuration(value);
+                },
+                color: tickColor,
+              },
+            },
+          },
+          layout: {
+            padding: {
+              top: 10,
+              bottom: 10,
+              left: 10,
+              right: 10
+            }
+          }
+        };
+
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('chart').style.display = 'block';
+
+        // Calculate dynamic height based on number of blocks
+        // Each block needs approximately 40-50px of vertical space
+        const blockCount = blockNames.length;
+        const minHeight = Math.max(200, blockCount * 15 + 100); // Mínimo 600px, más espacio por bloque
+
+        const chartContainer = document.getElementById('chart-container');
+        chartContainer.style.minHeight = minHeight + 'px';
+        document.body.style.minHeight = minHeight + 'px';
+        document.documentElement.style.minHeight = minHeight + 'px';
+
+        const canvas = document.getElementById('chart');
+        new Chart(canvas, {
+          type: 'bar',
+          data: {
+            labels: blockNames,
+            datasets: datasets
+          },
+          options: chartOptions,
+        });
+      } catch (error) {
+        console.error('Error loading data:', error);
+        document.getElementById('no-data').style.display = 'block';
+        document.getElementById('loading').style.display = 'none';
+      }
+    }
+
+    function getCategoryColor(category) {
+      if (categoryColors[category]) {
+        return categoryColors[category];
+      }
+
+      const defaultColors = {
+        'Uncategorized': '#CCC'
+      };
+
+      return defaultColors[category] || '#6699ff'; // Default blue
+    }
+
+    window.addEventListener('load', loadAndRenderChart);
+  </script>
+</body>
 
 </html>
