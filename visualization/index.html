@@ -165,41 +165,38 @@
           return;
         }
 
-        // Get window events and filter by non-afk
-        const windowQuery = `
-events = query_bucket("${bid_window}");
-afk_events = query_bucket("${bid_afk}");
-not_afk = filter_keyvals(afk_events, "status", ["not-afk"]);
-events = filter_period_intersect(events, not_afk);
-RETURN = events;
-        `;
-        const windowData = await client.query([`${start}/${end}`], [windowQuery]);
-        const windowEvents = windowData[0] || [];
-
         // Get categories from classes
         const classes = await client.get_setting("classes");
 
-        // Categorize window events
+        // Categorize window events (without filtering AFK)
         const categorizeQuery = `
 events = query_bucket("${bid_window}");
-afk_events = query_bucket("${bid_afk}");
-not_afk = filter_keyvals(afk_events, "status", ["not-afk"]);
-events = filter_period_intersect(events, not_afk);
 events = categorize(events, ${JSON.stringify(classes.map(cls => [cls.name, cls.rule]))});
 RETURN = events;
         `;
         const categorizedData = await client.query([`${start}/${end}`], [categorizeQuery]);
         const categorizedEvents = categorizedData[0] || [];
 
+        // Get AFK events to create a separate category
+        const afkQuery = `
+afk_events = query_bucket("${bid_afk}");
+afk = filter_keyvals(afk_events, "status", ["afk"]);
+RETURN = afk;
+        `;
+        const afkData = await client.query([`${start}/${end}`], [afkQuery]);
+        const afkEvents = afkData[0] || [];
+
         // Group nextblock events by block name and sort by timestamp
         const blockMap = {};
         const blockTimestamps = {};
+        const blockPlannedDurations = {};
 
         nextblockEvents.forEach(event => {
           const blockName = event.data.block || 'Unknown';
           if (!blockMap[blockName]) {
             blockMap[blockName] = [];
             blockTimestamps[blockName] = new Date(event.timestamp).getTime();
+            blockPlannedDurations[blockName] = event.data.planned_duration * 60 || 0;
           }
           blockMap[blockName].push(event);
         });
@@ -217,6 +214,11 @@ RETURN = events;
           categorySet.add(category);
         });
 
+        // Add AFK as a category
+        if (afkEvents.length > 0) {
+          categorySet.add('AFK');
+        }
+
         const categories = Array.from(categorySet).sort();
 
         // Build datasets for each category
@@ -227,6 +229,18 @@ RETURN = events;
             const blockStart = new Date(blockEvents[0].timestamp).getTime();
             const blockEnd = blockStart + (blockEvents[0].duration * 1000);
 
+            // Handle AFK category separately
+            if (category === 'AFK') {
+              return afkEvents
+                .filter(e => {
+                  const eventStart = new Date(e.timestamp).getTime();
+                  const eventEnd = eventStart + (e.duration * 1000);
+                  return eventStart < blockEnd && eventEnd > blockStart;
+                })
+                .reduce((sum, e) => sum + e.duration, 0);
+            }
+
+            // Handle regular categories
             return categorizedEvents
               .filter(e => {
                 const eventCategory = e.data.$category ?
@@ -247,8 +261,19 @@ RETURN = events;
             label: category,
             data: data,
             backgroundColor: getCategoryColor(category),
-            borderWidth: 0
+            borderWidth: 0,
+            stack: 'actual'
           };
+        });
+
+        // Add planned duration dataset
+        const plannedData = blockNames.map(blockName => blockPlannedDurations[blockName]);
+        datasets.push({
+          label: 'Planned Duration',
+          data: plannedData,
+          backgroundColor: 'rgba(255, 140, 0, 0.7)',
+          borderWidth: 0,
+          stack: 'planned'
         });
 
         if (datasets.length === 0) {
@@ -320,7 +345,7 @@ RETURN = events;
         // Calculate dynamic height based on number of blocks
         // Each block needs approximately 40-50px of vertical space
         const blockCount = blockNames.length;
-        const minHeight = Math.max(200, blockCount * 15 + 100); // Mínimo 600px, más espacio por bloque
+        const minHeight = Math.max(250, blockCount * 20 + 100);
 
         const chartContainer = document.getElementById('chart-container');
         chartContainer.style.minHeight = minHeight + 'px';
@@ -344,6 +369,10 @@ RETURN = events;
     }
 
     function getCategoryColor(category) {
+      if (category === 'AFK') {
+        return '#888888'; // Gray color for AFK
+      }
+
       if (categoryColors[category]) {
         return categoryColors[category];
       }
