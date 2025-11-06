@@ -46,7 +46,9 @@ Session feedback is delivered via system notifications at configurable intervals
 
 A Custom visualization shows your planned blocks alongside actual activity data in a clear parallel-bar chart. See exactly what happened during each block and use these insights to improve your workflow.
 
-[image placeholder]
+![Custom Visualization](images/custom_visualization.png)
+![Actual Duration](images/actual_duration_label.png)
+![Planned Duration](images/planned_duration_label.png)
 
 
 ## Why it's useful
