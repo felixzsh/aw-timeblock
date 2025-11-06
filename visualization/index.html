@@ -285,6 +285,19 @@ RETURN = afk;
         const gridColor = theme === 'dark' ? '#333333' : '#E0E0E0';
         const tickColor = theme === 'dark' ? '#CCCCCC' : '#666666';
 
+        // Calculate total time for each block (excluding Planned Duration)
+        const blockTotals = {};
+        blockNames.forEach((blockName, index) => {
+          let total = 0;
+          datasets.forEach((dataset, datasetIndex) => {
+            // Skip the 'Planned Duration' dataset
+            if (dataset.label !== 'Planned Duration') {
+              total += dataset.data[index] || 0;
+            }
+          });
+          blockTotals[blockName] = total;
+        });
+
         const chartOptions = {
           responsive: true,
           maintainAspectRatio: false,
@@ -294,6 +307,16 @@ RETURN = afk;
               callbacks: {
                 label: function (context) {
                   const duration = formatDuration(context.parsed.x);
+                  const blockName = context.label;
+                  const totalTime = blockTotals[blockName];
+                  
+                  // Show total time for activity datasets (not Planned Duration)
+                  if (context.dataset.label !== 'Planned Duration') {
+                    return [
+                      `${context.dataset.label}: ${duration}`,
+                      `Total: ${formatDuration(totalTime)}`
+                    ];
+                  }
                   return `${context.dataset.label}: ${duration}`;
                 },
                 title: function (context) {
