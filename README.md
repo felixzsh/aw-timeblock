@@ -151,18 +151,18 @@ In active development. Installation instructions coming with first release.
 - [x] Basic CLI commands (`start`, `next`, `status`, `stop`) via `nextblock-ctl`
 
 ### Milestone 2: Watcher Implementation
-- [ ] Config file/args loading
-- [ ] Main monitor loop
-- [ ] aw-client intgration
+- [x] Config file/args loading
+- [x] Main monitor loop
+- [x] aw-client intgration
 
 ### Milestone 3: Notifications
-- [ ] Define triggers
-- [ ] implementation in watcher loop
-- [ ] Configurable notification triggers
+- [x] Define triggers
+- [x] implementation in watcher loop
+- [x] Configurable notification triggers
 
 ### Milestone 4: Custom Visualization
-- [ ] Define visualization approach for contrasting data
-- [ ] Implement custom ActivityWatch visualization
+- [x] Define visualization approach for contrasting data
+- [x] Implement custom ActivityWatch visualization
 
 ### Milestone 4: Distribution
 - [ ] Package for PyPI
