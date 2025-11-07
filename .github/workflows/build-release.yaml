@@ -1,0 +1,191 @@
+name: Build and Release
+
+permissions:
+  contents: write
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          PREVIOUS_TAG=$(git tag --sort=-creatordate | sed -n '2p')
+ 
+          if [ -z "$PREVIOUS_TAG" ]; then
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" --no-merges)
+          else
+            CHANGELOG=$(git log ${PREVIOUS_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
+          fi
+
+          echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          body: |
+            ## Changes in this release
+
+            ${{ steps.changelog.outputs.CHANGELOG }}
+
+            ## Downloads
+
+            Choose the correct file for your operating system:
+            - **Linux**: `aw-nextblock-linux.zip`
+            - **Windows**: `aw-nextblock-windows.zip`
+            - **macOS**: `aw-nextblock-macos.zip`
+
+            ## Installation
+
+            1. Download and extract the ZIP file
+            2. Run `nextblock-ctl --help` or `aw-watcher-nextblock`
+            3. Configure visualization path: `nextblock-ctl visualization-path`
+          draft: false
+          prerelease: false
+
+  build-linux:
+    needs: create-release
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+
+      - name: Install Poetry
+        run: pip install poetry==2.2.1
+
+      - name: Install dependencies
+        run: |
+          poetry config virtualenvs.create false
+          poetry install
+
+      - name: Install PyInstaller
+        run: pip install pyinstaller
+
+      - name: Build with PyInstaller
+        run: pyinstaller --clean pyinstaller.spec
+
+      - name: Create ZIP with visualization
+        run: |
+          cd dist
+          zip -r ../aw-nextblock-linux.zip aw-nextblock/
+          cd ..
+          zip -r aw-nextblock-linux.zip visualization/
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./aw-nextblock-linux.zip
+          asset_name: aw-nextblock-linux.zip
+          asset_content_type: application/zip
+
+  build-windows:
+    needs: create-release
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+
+      - name: Install Poetry
+        run: pip install poetry==2.2.1
+
+      - name: Install dependencies
+        run: |
+          poetry config virtualenvs.create false
+          poetry install
+
+      - name: Install PyInstaller
+        run: pip install pyinstaller
+
+      - name: Build with PyInstaller
+        run: pyinstaller --clean pyinstaller.spec
+
+      - name: Create ZIP with visualization
+        shell: powershell
+        run: |
+          Compress-Archive -Path dist/aw-nextblock/* -DestinationPath aw-nextblock-windows.zip
+          Expand-Archive -Path aw-nextblock-windows.zip -DestinationPath temp
+          Copy-Item -Path visualization -Destination temp/visualization -Recurse
+          Remove-Item aw-nextblock-windows.zip
+          Compress-Archive -Path temp/* -DestinationPath aw-nextblock-windows.zip
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./aw-nextblock-windows.zip
+          asset_name: aw-nextblock-windows.zip
+          asset_content_type: application/zip
+
+  build-macos:
+    needs: create-release
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        run: |
+          curl https://www.python.org/ftp/python/3.13.0/python-3.13.0-macos11.pkg -o "python.pkg"
+          sudo installer -pkg python.pkg -target /
+          echo "/Library/Frameworks/Python.framework/Versions/3.13/bin" >> $GITHUB_PATH
+
+      - name: Install Poetry
+        run: pip3 install poetry==2.2.1
+
+      - name: Install dependencies
+        run: |
+          poetry config virtualenvs.create false
+          poetry install
+
+      - name: Install PyInstaller
+        run: pip3 install pyinstaller
+
+      - name: Build with PyInstaller
+        run: pyinstaller --clean pyinstaller.spec
+
+      - name: Create ZIP with visualization
+        run: |
+          cd dist
+          zip -r ../aw-nextblock-macos.zip aw-nextblock/
+          cd ..
+          zip -r aw-nextblock-macos.zip visualization/
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./aw-nextblock-macos.zip
+          asset_name: aw-nextblock-macos.zip
+          asset_content_type: application/zip
