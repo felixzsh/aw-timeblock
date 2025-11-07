@@ -9,3 +9,4 @@ build/
 
 pyrightconfig.json
 .mise.toml
+release.sh
