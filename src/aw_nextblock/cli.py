@@ -4,8 +4,10 @@ import sys
 from pathlib import Path
 from datetime import datetime
 import click
+import asyncio
 
 from .session import Session, session_exists, save_session, load_session, delete_session
+from .watcher import watcher_async
 from . import __version__
 
 logger = logging.getLogger(__name__)
@@ -39,6 +41,7 @@ def start(plan_file: Path):
         click.echo(f"Session '{session.name}' started successfully!")
         if session.current_block:
             click.echo(f"Current block: {session.current_block.name if session.current_block else 'None'}")
+            asyncio.run(watcher_async())
     else:
         click.echo("Failed to save session state", err=True)
         sys.exit(1)

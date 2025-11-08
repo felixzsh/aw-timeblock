@@ -1,7 +1,7 @@
 [project]
 name = "aw-nextblock"
 version = "0.1.0"
-description = "aw watcher and cli tool to do timeblocking diferently"
+description = "cli tool for activity watch to do timeblocking diferently"
 authors = [
     {name = "felixzsh",email = "felix.sanchez.dev@gmail.com"}
 ]
@@ -16,8 +16,7 @@ dependencies = [
 ]
 
 [project.scripts]
-nextblock-ctl = "aw_nextblock:cli"
-aw-watcher-nextblock = "aw_nextblock:main"
+aw-nextblock = "aw_nextblock:cli"
 
 [tool.poetry]
 packages = [

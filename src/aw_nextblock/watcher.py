@@ -22,7 +22,7 @@ notify_after_every_minutes = 5
 time_scale_factor = 1
 """.strip()
 
-async def main_async():
+async def watcher_async():
     parser = argparse.ArgumentParser()
     parser.add_argument("--testing", action="store_true")
     parser.add_argument("--verbose", action="store_true")
@@ -125,15 +125,12 @@ async def main_async():
             if notifications_enabled:
                 await handle_notifications(session, last_notifications, time_scale_factor)
         else:
-            pass
+            logger.error("No active session, stopping watcher")
+            break
 
         elapsed = time.time() - cycle_start
         sleep_time = max(0, poll_time - elapsed)
         if sleep_time > 0:
             await asyncio.sleep(sleep_time)
 
-def main():
-    asyncio.run(main_async())
 
-if __name__ == "__main__":
-    main()
