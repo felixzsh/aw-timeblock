@@ -11,9 +11,7 @@
   - [Session Review](#session-review)
 - [Why it's useful](#why-its-useful)
 - [Getting Started](#getting-started)
-  - [Main Components](#main-components)
-  - [Setup the watcher](#setup-the-watcher)
-  - [Control commands](#control-commands)
+  - [CLI Commands](#control-commands)
   - [Triggering Next](#triggering-next)
   - [Setup Custom Visualization](#setup-custom-visualization)
   - [Usage](#usage)
@@ -59,32 +57,24 @@ aw-nextblock provides structure without rigidity. Plans are guides, not rules. Y
 
 ## Getting Started
 
-### Main Components
+### CLI commands
 
-- **`nextblock-ctl`**: Command-line tool for managing work sessions.
-- **`aw-watcher-nextblock`**: Background watcher that monitors session state.
-
-
-### Setup the watcher - **TBD**
-
-### Control commands
-
-Use `nextblock-ctl` for session management:
+Use `aw-nextblock` for session management:
 
 ```bash
-nextblock-ctl start <plan.yaml>    # Start a work session
-nextblock-ctl next                 # Move to next block
-nextblock-ctl status               # Check current status
-nextblock-ctl stop                 # Stop current session
+aw-nextblock start <plan.yaml>    # Start a work session
+aw-nextblock next                 # Move to next block
+aw-nextblock status               # Check current status
+aw-nextblock stop                 # Stop current session
 ```
 
 ### Triggering Next
 
-While you can run `nextblock-ctl next` from a terminal, the recommended approach is using a keybinding for instant access during your workflow.
+While you can run `aw-nextblock next` from the terminal, the recommended approach is using a keybinding for instant access during your workflow.
 
 Example Hyprland keybinding:
 ```
-bind = $mainMod ALT, N, exec, nextblock-ctl next
+bind = $mainMod ALT, N, exec, aw-nextblock next
 ```
 
 ### Setup Custom Visualization - **TBD**
@@ -114,17 +104,17 @@ Durations are estimates, not limits.
 #### 2. Start Your Session
 
 ```bash
-nextblock-ctl start plan.yaml
+aw-nextblock start plan.yaml
 ```
 
-This creates a session file that the watcher will monitor.
+This creates a session file and start its aw watcher process.
 
 #### 3. Work and Advance
 
 Focus on your current task. When ready to move forward:
 
 ```bash
-nextblock-ctl next
+aw-nextblock next
 ```
 
 See [Triggering Next](#triggering-next) for recommended setup.
@@ -150,7 +140,7 @@ In active development. Installation instructions coming with first release.
 ### Milestone 1: core CLI
 - [x] YAML plan parsing
 - [x] Session state management
-- [x] Basic CLI commands (`start`, `next`, `status`, `stop`) via `nextblock-ctl`
+- [x] Basic CLI commands (`start`, `next`, `status`, `stop`) via `aw-nextblock`
 
 ### Milestone 2: Watcher Implementation
 - [x] Config file/args loading
