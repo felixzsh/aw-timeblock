@@ -6,6 +6,7 @@ __pycache__/
 
 # Instalaciones de desarrollo
 build/
+dist/
 
 pyrightconfig.json
 .mise.toml

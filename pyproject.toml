@@ -6,7 +6,7 @@ authors = [
     {name = "felixzsh",email = "felix.sanchez.dev@gmail.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.13,<4.0"
+requires-python = ">=3.13,<3.15"
 dependencies = [
     "pyyaml (>=6.0.3,<7.0.0)",
     "aw-client (>=0.5.15,<0.6.0)",
@@ -26,3 +26,8 @@ packages = [
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "pyinstaller (>=6.16.0,<7.0.0)"
+]
