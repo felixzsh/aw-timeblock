@@ -53,7 +53,10 @@ async def watcher_async():
     aw.connect()
     logger.info("aw-watcher-nextblock started")
     session = None
-    notifier = DesktopNotifier()
+    notifier = DesktopNotifier(
+        app_name=watcher_name,
+        app_icon=None
+    )
     last_notifications = {}
 
 
@@ -133,5 +136,3 @@ async def watcher_async():
         sleep_time = max(0, poll_time - elapsed)
         if sleep_time > 0:
             await asyncio.sleep(sleep_time)
-
-
