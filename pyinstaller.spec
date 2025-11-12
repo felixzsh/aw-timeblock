@@ -1,13 +1,19 @@
 block_cipher = None
 
-added_files = []
+import os
+from PyInstaller.utils.hooks import collect_data_files
+
+# Collect data files from desktop-notifier
+desktop_notifier_data = collect_data_files('desktop_notifier')
+
+added_files = desktop_notifier_data
 
 cli_a = Analysis(
-    ['src/aw_nextblock/cli.py'],
+    ['src/aw_nextblock/__main__.py'],
     pathex=[],
     binaries=[],
     datas=added_files,
-    hiddenimports=[],
+    hiddenimports=['desktop_notifier.resources'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
