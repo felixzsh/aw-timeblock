@@ -1,6 +1,5 @@
 import logging
 import time
-import argparse
 import asyncio
 from datetime import datetime, timezone
 from aw_core.models import Event
@@ -20,29 +19,31 @@ notifications_enabled = true
 notify_before_minutes = 5
 notify_after_every_minutes = 5
 time_scale_factor = 1
+testing = false
+verbose_logging = false
 """.strip()
 
 async def watcher_async():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--testing", action="store_true")
-    parser.add_argument("--verbose", action="store_true")
-    args = parser.parse_args()
 
-    aw = ActivityWatchClient("aw-watcher-nextblock", testing=args.testing)
+    watcher_name = "aw-watcher-nextblock"
 
-    config = load_config_toml(aw.client_name, DEFAULT_CONFIG)
-    poll_time = float(config[aw.client_name].get("poll_time"))
-    notifications_enabled = config[aw.client_name].get("notifications_enabled")
-    notify_before_minutes = int(config[aw.client_name].get("notify_before_minutes"))
-    notify_after_every_minutes = int(config[aw.client_name].get("notify_after_every_minutes"))
-    if args.testing:
-        time_scale_factor = float(config[aw.client_name].get("time_scale_factor"))
+    config = load_config_toml(watcher_name, DEFAULT_CONFIG)
+    poll_time = float(config[watcher_name].get("poll_time"))
+    notifications_enabled = config[watcher_name].get("notifications_enabled")
+    notify_before_minutes = int(config[watcher_name].get("notify_before_minutes"))
+    notify_after_every_minutes = int(config[watcher_name].get("notify_after_every_minutes"))
+    testing_mode = config[watcher_name].get("testing")
+    verbose_logging =  config[watcher_name].get("verbose_logging")
+
+    aw = ActivityWatchClient("aw-watcher-nextblock", testing=testing_mode)
+    if testing_mode:
+        time_scale_factor = float(config[watcher_name].get("time_scale_factor"))
     else:
         time_scale_factor = 1.0
     setup_logging(
-        name=aw.client_name,
-        testing=args.testing,
-        verbose=args.verbose,
+        name=watcher_name,
+        testing=testing_mode,
+        verbose=verbose_logging,
         log_stderr=True,
         log_file=True,
     )
