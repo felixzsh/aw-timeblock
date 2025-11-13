@@ -1,0 +1,23 @@
+name: "Working on aw-nextblock"
+
+blocks:
+  - name: yaml plans loading
+    duration: 15
+  - name: "session management module"
+    duration: 45
+  - name: "test cases for session operations"
+    duration: 30
+  - name: "cli cmds to handle session"
+    duration: 30
+  - name: "read aw documentation for watcher creation"
+    duration: 20
+  - name: "aw watcher main loop"
+    duration: 15
+  - name: "validate aw integration"
+    duration: 35
+  - name: "notifications in main loop"
+    duration: 30
+  - name: "load config settings"
+    duration: 20
+  - name: "validate aw + notfs"
+    duration: 30
