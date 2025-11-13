@@ -5,7 +5,7 @@ from pathlib import Path
 from datetime import datetime
 import click
 import asyncio
-
+from desktop_notifier import DesktopNotifier
 from .session import Session, session_exists, save_session, load_session, delete_session
 from .watcher import watcher_async
 from . import __version__
@@ -65,6 +65,16 @@ def next():
             session.current_block.start_dt = datetime.now()
             if save_session(session):
                 click.echo(f"Moved to next block: {session.current_block.name}")
+
+                notifier = DesktopNotifier(
+                    app_name="aw-nextblock",
+                    app_icon=None
+                )
+                asyncio.run(notifier.send(
+                    title=f"{session.current_block.name}",
+                    message=f"{session.current_block.name} just started!",
+                    icon=None
+                ))
         else:
             click.echo("Failed to save session state", err=True)
             sys.exit(1)
