@@ -1,12 +1,12 @@
 block_cipher = None
-
 import os
-from PyInstaller.utils.hooks import collect_data_files
+from PyInstaller.utils.hooks import collect_data_files, copy_metadata
 
-# Collect data files from desktop-notifier
 desktop_notifier_data = collect_data_files('desktop_notifier')
 
-added_files = desktop_notifier_data
+aw_nextblock_metadata = copy_metadata('aw-nextblock')
+
+added_files = desktop_notifier_data + aw_nextblock_metadata
 
 cli_a = Analysis(
     ['src/aw_nextblock/__main__.py'],
@@ -46,4 +46,3 @@ cli_exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
 )
-
