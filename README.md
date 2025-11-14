@@ -13,15 +13,9 @@
 - [Getting Started](#getting-started)
   - [CLI Commands](#control-commands)
   - [Triggering Next](#triggering-next)
-  - [Setup Custom Visualization](#setup-custom-visualization)
   - [Usage](#usage)
-- [Installation Setup](#installation-setup)
-  - [Watcher Configuration](#watcher-configuration)
-  - [Requirements](#requirements)
-- [Project Status](#project-status)
+- [Installation and Setup](#installation-and-setup)
 - [Contributing](#contributing)
-- [License](#license)
-- [Related](#related)
 
 ---
 
@@ -123,7 +117,14 @@ See [Triggering Next](#triggering-next) for recommended setup.
 
 After completing your work session, use the custom visualization in ActivityWatch's web UI to analyze your planned blocks against actual activity data.
 
-## Installation Setup
+## Installation and Setup
+
+### Requirements
+
+- ActivityWatch (installed and running)
+- Linux/macOS/Windows
+
+**Note:** macOS binary not tested, open an issue if you find any problems.
 
 ### Download Binary
 
@@ -206,13 +207,6 @@ testing = false
 # Verbose logging
 verbose_logging = false
 ```
-
-### Requirements
-
-- ActivityWatch (installed and running)
-- Linux/macOS/Windows
-
-**Note:** macOS binary not tested, open an issue if you find any problems.
 
 ## Contributing
 
