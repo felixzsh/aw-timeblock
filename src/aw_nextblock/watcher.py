@@ -71,7 +71,7 @@ async def watcher_async(testing=False, verbose=False):
             if f"before_{block.name}" not in last_notifications:
                 last_notifications[f"before_{block.name}"] = True
                 await notifier.send(
-                    title=f"{block.name}",
+                    title=f"{session.name}",
                     message=f"{block.name} ends in {notify_before_minutes} minutes",
                     icon=None
                 )
@@ -88,7 +88,7 @@ async def watcher_async(testing=False, verbose=False):
                 last_notifications[after_key] = True
                 if intervals_passed == 0:
                     await notifier.send(
-                        title=f"{block.name}",
+                        title=f"{session.name}",
                         message=f"{block.name} reached {block.planned_duration} minutes!",
                         icon=None
                     )
@@ -96,8 +96,8 @@ async def watcher_async(testing=False, verbose=False):
                 else:
                     accumulated_minutes = int(time_over_seconds / 60)
                     await notifier.send(
-                        title=f"{block.name}",
-                        message=f"Overtime: +{accumulated_minutes}m",
+                        title=f"{session.name}",
+                        message=f"Overtime: +{accumulated_minutes}m for {block.name}",
                         icon=None
                     )
                     logger.info(f"Sent AFTER notification for block: {block.name} (overtime: {accumulated_minutes}m)")

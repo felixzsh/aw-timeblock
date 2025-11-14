@@ -86,7 +86,7 @@ def next():
                     app_icon=None
                 )
                 asyncio.run(notifier.send(
-                    title=f"{session.current_block.name}",
+                    title=f"{session.name}",
                     message=f"{session.current_block.name} just started!",
                     icon=None
                 ))
