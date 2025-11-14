@@ -178,9 +178,11 @@ aw-watcher-nextblock = "/path/to/your/visualization/folder/"
 
 The watcher (started with `aw-nextblock start`) can be configured by creating a `aw-watcher-nextblock.toml` file in the watcher's configuration directory:
 
-**Linux** (`~/.config/activitywatch/aw-watcher-nextblock/aw-watcher-nextblock.toml`):
-**Windows** (`%APPDATA%\activitywatch\aw-watcher-nextblock\aw-watcher-nextblock.toml`):
-**macOS** (`~/Library/Application Support/activitywatch/aw-watcher-nextblock/aw-watcher-nextblock.toml`):
+**Linux** (`~/.config/activitywatch/aw-watcher-nextblock/aw-watcher-nextblock.toml`)
+
+**Windows** (`%APPDATA%\activitywatch\aw-watcher-nextblock\aw-watcher-nextblock.toml`) 
+
+**macOS** (`~/Library/Application Support/activitywatch/aw-watcher-nextblock/aw-watcher-nextblock.toml`) 
 
 Available configuration options:
 
