@@ -16,6 +16,7 @@
   - [Setup Custom Visualization](#setup-custom-visualization)
   - [Usage](#usage)
 - [Installation Setup](#installation-setup)
+  - [Watcher Configuration](#watcher-configuration)
   - [Requirements](#requirements)
 - [Project Status](#project-status)
 - [Contributing](#contributing)
@@ -171,6 +172,40 @@ aw-watcher-nextblock = "/Users/USER/Library/Application Support/activitywatch/vi
 8. In ActivityWatch web UI, add a new Custom visualization
 9. When prompted for the watcher name, enter: `aw-watcher-nextblock`
 10. The visualization should now appear showing your planned vs actual activity data
+
+### Watcher Configuration
+
+The watcher (started with `aw-nextblock start`) can be configured by creating a `aw-watcher-nextblock.toml` file in your ActivityWatch configuration directory:
+
+**Linux** (`~/.config/activitywatch/aw-watcher-nextblock.toml`):
+**Windows** (`%APPDATA%\activitywatch\aw-watcher-nextblock.toml`):
+**macOS** (`~/Library/Application Support/activitywatch/aw-watcher-nextblock.toml`):
+
+Available configuration options:
+
+```toml
+[aw-watcher-nextblock]
+# Polling interval in seconds
+poll_time = 1.0
+
+# Enable/disable notifications
+notifications_enabled = true
+
+# Minutes before planned duration to send notification
+notify_before_minutes = 5
+
+# Minutes interval for overtime notifications
+notify_after_every_minutes = 5
+
+# Time scaling factor (only used for testing)
+time_scale_factor = 1
+
+# Testing mode
+testing = false
+
+# Verbose logging
+verbose_logging = false
+```
 
 ### Requirements
 
