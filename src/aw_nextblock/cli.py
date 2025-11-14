@@ -18,12 +18,17 @@ logger = logging.getLogger(__name__)
 @click.pass_context
 @click.option('--testing', is_flag=True, help='Enable testing mode for the watcher')
 @click.option('--verbose', is_flag=True, help='Enable verbose logging for the watcher')
-def cli(ctx, testing, verbose):
+@click.option('--version', is_flag=True, help='Show version information')
+def cli(ctx, testing, verbose, version):
     """aw-nextblock: Flexible time blocking for ActivityWatch
     
     Run without commands to start the watcher process.
     Use commands for session management.
     """
+    if version:
+        click.echo(f"aw-nextblock v{__version__}")
+        ctx.exit()
+    
     ctx.obj = {
         'testing': testing,
         'verbose': verbose
@@ -125,13 +130,7 @@ def stop():
         click.echo("No active session found", err=True)
         sys.exit(1)
 
-@click.command()
-def version():
-    """Show version information"""
-    click.echo(f"aw-nextblock v{__version__}")
-
 cli.add_command(start)
 cli.add_command(next)
 cli.add_command(status)
 cli.add_command(stop)
-cli.add_command(version)
