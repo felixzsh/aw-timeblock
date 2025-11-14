@@ -214,31 +214,6 @@ verbose_logging = false
 
 **Note:** macOS binary not tested, open an issue if you find any problems.
 
-## Project Status
-
-### Milestone 1: core CLI
-- [x] YAML plan parsing
-- [x] Session state management
-- [x] Basic CLI commands (`start`, `next`, `status`, `stop`) via `aw-nextblock`
-
-### Milestone 2: Watcher Implementation
-- [x] Config file/args loading
-- [x] Main monitor loop
-- [x] aw-client intgration
-
-### Milestone 3: Notifications
-- [x] Define triggers
-- [x] implementation in watcher loop
-- [x] Configurable notification triggers
-
-### Milestone 4: Custom Visualization
-- [x] Define visualization approach for contrasting data
-- [x] Implement custom ActivityWatch visualization
-
-### Milestone 4: Distribution
-- [x] Installation instructions
-- [x] Setup automation
-
 ## Contributing
 
 Contributions welcome. Open an issue to discuss changes before submitting PRs.
