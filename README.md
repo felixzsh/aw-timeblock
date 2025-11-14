@@ -57,10 +57,19 @@ aw-nextblock provides structure without rigidity. Plans are guides, not rules. Y
 Use `aw-nextblock` for session management:
 
 ```bash
-aw-nextblock start <plan.yaml>    # Start a work session
-aw-nextblock next                 # Move to next block
-aw-nextblock status               # Check current status
-aw-nextblock stop                 # Stop current session
+aw-nextblock                     # Start the watcher process
+aw-nextblock start <plan.yaml>   # Start a work session
+aw-nextblock next                # Move to next block
+aw-nextblock status              # Check current status
+aw-nextblock stop                # Stop current session
+aw-nextblock --help              # Show help
+aw-nextblock --version           # Show version
+```
+
+**Watcher-specific flags:**
+```bash
+aw-nextblock --testing           # Start watcher in testing mode
+aw-nextblock --verbose           # Enable verbose logging
 ```
 
 ### Triggering Next
@@ -101,7 +110,7 @@ Durations are estimates, not limits.
 aw-nextblock start plan.yaml
 ```
 
-This creates a session file and start its aw watcher process.
+This creates a session.json file. The watcher process monitors this file.
 
 #### 3. Work and Advance
 
@@ -144,6 +153,17 @@ After completing your work session, use the custom visualization in ActivityWatc
    - **Linux/macOS**: Copy to `/usr/local/bin/` or add to your `$PATH`
    - **Windows**: Add to a directory in your `PATH` environment variable
 
+### Autostart Watcher
+
+Optionally, add `aw-nextblock` to autostart in your `aw-qt.toml` file in the [config directory](https://docs.activitywatch.net/en/latest/directories.html#config).
+
+Add `aw-nextblock` to the `autostart_modules` list:
+
+```toml
+[aw-qt]
+autostart_modules = ["aw-server", "aw-watcher-afk", "aw-watcher-window", "aw-nextblock"]
+```
+
 ### Optional: Setup Visualization (Experimental Feature)
 
 The visualization allows you to see your planned vs actual activity data in ActivityWatch's web UI. This is an **experimental feature** that requires manual configuration.
@@ -176,7 +196,7 @@ aw-watcher-nextblock = "/path/to/your/visualization/folder/"
 
 ### Watcher Configuration
 
-The watcher (started with `aw-nextblock start`) can be configured by creating a `aw-watcher-nextblock.toml` file in the watcher's configuration directory:
+Create a `aw-watcher-nextblock.toml` file in the watcher's configuration directory:
 
 **Linux** (`~/.config/activitywatch/aw-watcher-nextblock/aw-watcher-nextblock.toml`)
 
@@ -202,15 +222,7 @@ notify_after_every_minutes = 5
 
 # Time scaling factor (only used for testing)
 time_scale_factor = 1
-
-# Testing mode
-testing = false
-
-# Verbose logging
-verbose_logging = false
 ```
-
 ## Contributing
 
 Contributions welcome. Open an issue to discuss changes before submitting PRs.
-
