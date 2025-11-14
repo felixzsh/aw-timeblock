@@ -15,7 +15,7 @@
   - [Triggering Next](#triggering-next)
   - [Setup Custom Visualization](#setup-custom-visualization)
   - [Usage](#usage)
-- [Installation](#installation)
+- [Installation Setup](#installation-setup)
   - [Requirements](#requirements)
 - [Project Status](#project-status)
 - [Contributing](#contributing)
@@ -77,7 +77,6 @@ Example Hyprland keybinding:
 bind = $mainMod ALT, N, exec, aw-nextblock next
 ```
 
-### Setup Custom Visualization - **TBD**
 
 ### Usage
 
@@ -123,17 +122,62 @@ See [Triggering Next](#triggering-next) for recommended setup.
 
 After completing your work session, use the custom visualization in ActivityWatch's web UI to analyze your planned blocks against actual activity data.
 
-## Installation
+## Installation Setup
 
-In active development. Installation instructions coming with first release.
+### Download Binary
+
+1. Go to the [Releases page](https://github.com/felixzsh/aw-nextblock/releases) on GitHub
+2. Download the ZIP file for your operating system:
+   - **Linux**: `aw-nextblock-linux.zip`
+   - **Windows**: `aw-nextblock-windows.zip`
+   - **macOS**: `aw-nextblock-macos.zip`
+
+3. Extract the downloaded ZIP file. You'll get:
+   - `aw-nextblock` binary executable
+   - `visualization/` folder
+
+### Install Binary
+
+4. Add the `aw-nextblock` binary to your system PATH:
+   - **Linux/macOS**: Copy to `/usr/local/bin/` or add to your `$PATH`
+   - **Windows**: Add to a directory in your `PATH` environment variable
+
+### Optional: Setup Visualization (Experimental Feature)
+
+The visualization allows you to see your planned vs actual activity data in ActivityWatch's web UI. This is an **experimental feature** that requires manual configuration.
+
+5. Place the `visualization/` folder anywhere on your system (recommended: ActivityWatch config directory)
+6. Configure ActivityWatch to serve the visualization by adding this to your `aw-server.toml` config file:
+
+**Linux** (`~/.config/activitywatch/aw-server.toml`):
+```toml
+[server.custom_static]
+aw-watcher-nextblock = "/home/USER/.config/activitywatch/visualization/"
+```
+
+**Windows** (`%APPDATA%\activitywatch\aw-server.toml`):
+```toml
+[server.custom_static]
+aw-watcher-nextblock = "C:\\Users\\USER\\AppData\\Roaming\\activitywatch\\visualization\\"
+```
+
+**macOS** (`~/Library/Application Support/activitywatch/aw-server.toml`):
+```toml
+[server.custom_static]
+aw-watcher-nextblock = "/Users/USER/Library/Application Support/activitywatch/visualization/"
+```
+
+7. Restart ActivityWatch for the changes to take effect
+8. In ActivityWatch web UI, add a new Custom visualization
+9. When prompted for the watcher name, enter: `aw-watcher-nextblock`
+10. The visualization should now appear showing your planned vs actual activity data
 
 ### Requirements
 
-- Python 3.13+
 - ActivityWatch (installed and running)
 - Linux/macOS/Windows
 
-**Note:** Early development focuses on Linux. macOS and Windows support planned for first release.
+**Note:** macOS binary not tested, open an issue if you find any problems.
 
 ## Project Status
 
@@ -157,20 +201,10 @@ In active development. Installation instructions coming with first release.
 - [x] Implement custom ActivityWatch visualization
 
 ### Milestone 4: Distribution
-- [ ] Package for PyPI
-- [ ] Installation instructions
-- [ ] Setup automation
-- [ ] Cross-platform testing
+- [x] Installation instructions
+- [x] Setup automation
 
 ## Contributing
 
 Contributions welcome. Open an issue to discuss changes before submitting PRs.
 
-## License
-
-MIT License
-
-## Related
-
-- [ActivityWatch](https://activitywatch.net/) - Automatic time tracking
-- [ActivityWatch Watchers](https://github.com/ActivityWatch?q=aw-watcher) - Activity tracking extensions
