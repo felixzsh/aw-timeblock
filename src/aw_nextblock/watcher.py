@@ -19,31 +19,25 @@ notifications_enabled = true
 notify_before_minutes = 5
 notify_after_every_minutes = 5
 time_scale_factor = 1
-testing = false
-verbose_logging = false
 """.strip()
 
-async def watcher_async():
+async def watcher_async(testing=False, verbose=False):
 
-    watcher_name = "aw-watcher-nextblock"
+    aw = ActivityWatchClient("aw-watcher-nextblock", testing=testing)
 
-    config = load_config_toml(watcher_name, DEFAULT_CONFIG)
-    poll_time = float(config[watcher_name].get("poll_time"))
-    notifications_enabled = config[watcher_name].get("notifications_enabled")
-    notify_before_minutes = int(config[watcher_name].get("notify_before_minutes"))
-    notify_after_every_minutes = int(config[watcher_name].get("notify_after_every_minutes"))
-    testing_mode = config[watcher_name].get("testing")
-    verbose_logging =  config[watcher_name].get("verbose_logging")
-
-    aw = ActivityWatchClient("aw-watcher-nextblock", testing=testing_mode)
-    if testing_mode:
-        time_scale_factor = float(config[watcher_name].get("time_scale_factor"))
+    config = load_config_toml(aw.client_name, DEFAULT_CONFIG)
+    poll_time = float(config[aw.client_name].get("poll_time"))
+    notifications_enabled = config[aw.client_name].get("notifications_enabled")
+    notify_before_minutes = int(config[aw.client_name].get("notify_before_minutes"))
+    notify_after_every_minutes = int(config[aw.client_name].get("notify_after_every_minutes"))
+    if testing:
+        time_scale_factor = float(config[aw.client_name].get("time_scale_factor"))
     else:
         time_scale_factor = 1.0
     setup_logging(
-        name=watcher_name,
-        testing=testing_mode,
-        verbose=verbose_logging,
+        name=aw.client_name,
+        testing=testing,
+        verbose=verbose,
         log_stderr=True,
         log_file=True,
     )
@@ -54,11 +48,10 @@ async def watcher_async():
     logger.info("aw-watcher-nextblock started")
     session = None
     notifier = DesktopNotifier(
-        app_name=watcher_name,
+        app_name=aw.client_hostname,
         app_icon=None
     )
     last_notifications = {}
-
 
     async def handle_notifications(session, last_notifications, time_scale_factor):
         """Handle before, at, and after notifications for current block"""
@@ -129,8 +122,7 @@ async def watcher_async():
             if notifications_enabled:
                 await handle_notifications(session, last_notifications, time_scale_factor)
         else:
-            logger.error("No active session, stopping watcher")
-            break
+            pass
 
         elapsed = time.time() - cycle_start
         sleep_time = max(0, poll_time - elapsed)

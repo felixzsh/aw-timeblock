@@ -7,15 +7,31 @@ import click
 import asyncio
 from desktop_notifier import DesktopNotifier
 from .session import Session, session_exists, save_session, load_session, delete_session
-from .watcher import watcher_async
 from . import __version__
 
 logger = logging.getLogger(__name__)
 
-@click.group()
-def cli():
-    """aw-nextblock: Flexible time blocking for ActivityWatch"""
-    pass
+@click.group(
+    context_settings={'help_option_names': ['-h', '--help']},
+    invoke_without_command=True
+)
+@click.pass_context
+@click.option('--testing', is_flag=True, help='Enable testing mode for the watcher')
+@click.option('--verbose', is_flag=True, help='Enable verbose logging for the watcher')
+def cli(ctx, testing, verbose):
+    """aw-nextblock: Flexible time blocking for ActivityWatch
+    
+    Run without commands to start the watcher process.
+    Use commands for session management.
+    """
+    ctx.obj = {
+        'testing': testing,
+        'verbose': verbose
+    }
+    
+    if ctx.invoked_subcommand is None:
+        from .watcher import watcher_async
+        asyncio.run(watcher_async(testing=testing, verbose=verbose))
 
 @click.command()
 @click.argument('plan_file', type=click.Path(exists=True, path_type=Path))
@@ -41,7 +57,6 @@ def start(plan_file: Path):
         click.echo(f"Session '{session.name}' started successfully!")
         if session.current_block:
             click.echo(f"Current block: {session.current_block.name if session.current_block else 'None'}")
-            asyncio.run(watcher_async())
     else:
         click.echo("Failed to save session state", err=True)
         sys.exit(1)
