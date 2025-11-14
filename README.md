@@ -80,7 +80,7 @@ bind = $mainMod ALT, N, exec, aw-nextblock next
 Create a YAML file with your work session:
 
 ```yaml
-session_name: "Morning Deep Work"
+name: "Morning Deep Work"
 
 blocks:
   - name: "Architecture Design"
