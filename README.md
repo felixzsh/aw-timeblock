@@ -150,22 +150,22 @@ The visualization allows you to see your planned vs actual activity data in Acti
 5. Place the `visualization/` folder anywhere on your system (recommended: ActivityWatch config directory)
 6. Configure ActivityWatch to serve the visualization by adding this to your `aw-server.toml` config file:
 
-**Linux** (`~/.config/activitywatch/aw-server.toml`):
+**Linux** (`~/.config/activitywatch/aw-server/aw-server.toml`):
 ```toml
 [server.custom_static]
-aw-watcher-nextblock = "/home/USER/.config/activitywatch/visualization/"
+aw-watcher-nextblock = "/path/to/your/visualization/folder/"
 ```
 
-**Windows** (`%APPDATA%\activitywatch\aw-server.toml`):
+**Windows** (`%APPDATA%\activitywatch\aw-server\aw-server.toml`):
 ```toml
 [server.custom_static]
-aw-watcher-nextblock = "C:\\Users\\USER\\AppData\\Roaming\\activitywatch\\visualization\\"
+aw-watcher-nextblock = "C:\\path\\to\\your\\visualization\\folder\\"
 ```
 
-**macOS** (`~/Library/Application Support/activitywatch/aw-server.toml`):
+**macOS** (`~/Library/Application Support/activitywatch/aw-server/aw-server.toml`):
 ```toml
 [server.custom_static]
-aw-watcher-nextblock = "/Users/USER/Library/Application Support/activitywatch/visualization/"
+aw-watcher-nextblock = "/path/to/your/visualization/folder/"
 ```
 
 7. Restart ActivityWatch for the changes to take effect
@@ -175,11 +175,11 @@ aw-watcher-nextblock = "/Users/USER/Library/Application Support/activitywatch/vi
 
 ### Watcher Configuration
 
-The watcher (started with `aw-nextblock start`) can be configured by creating a `aw-watcher-nextblock.toml` file in your ActivityWatch configuration directory:
+The watcher (started with `aw-nextblock start`) can be configured by creating a `aw-watcher-nextblock.toml` file in the watcher's configuration directory:
 
-**Linux** (`~/.config/activitywatch/aw-watcher-nextblock.toml`):
-**Windows** (`%APPDATA%\activitywatch\aw-watcher-nextblock.toml`):
-**macOS** (`~/Library/Application Support/activitywatch/aw-watcher-nextblock.toml`):
+**Linux** (`~/.config/activitywatch/aw-watcher-nextblock/aw-watcher-nextblock.toml`):
+**Windows** (`%APPDATA%\activitywatch\aw-watcher-nextblock\aw-watcher-nextblock.toml`):
+**macOS** (`~/Library/Application Support/activitywatch/aw-watcher-nextblock/aw-watcher-nextblock.toml`):
 
 Available configuration options:
 
