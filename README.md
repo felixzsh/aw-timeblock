@@ -1,6 +1,6 @@
 # aw-nextblock
 
-**WIP** CLI tool and [ActivityWatch](https://activitywatch.net) watcher for timeblocking sessions
+[ActivityWatch](https://activitywatch.net) module for timeblocking.
 
 ## Table of Contents
 
@@ -15,6 +15,12 @@
   - [Triggering Next](#triggering-next)
   - [Usage](#usage)
 - [Installation and Setup](#installation-and-setup)
+  - [Requirements](#requirements)
+  - [Download Binary](#download-binary)
+  - [Install Binary](#install-binary)
+  - [Autostart Watcher](#autostart-watcher)
+  - [Watcher Configuration](#watcher-configuration)
+  - [Optional: Setup Visualization](#optional-setup-visualization)
 - [Contributing](#contributing)
 
 ---
@@ -54,7 +60,6 @@ aw-nextblock provides structure without rigidity. Plans are guides, not rules. Y
 
 ### CLI commands
 
-Use `aw-nextblock` for session management:
 
 ```bash
 aw-nextblock                     # Start the watcher process
@@ -63,7 +68,6 @@ aw-nextblock next                # Move to next block
 aw-nextblock status              # Check current status
 aw-nextblock stop                # Stop current session
 aw-nextblock --help              # Show help
-aw-nextblock --version           # Show version
 ```
 
 **Watcher-specific flags:**
@@ -139,19 +143,15 @@ After completing your work session, use the custom visualization in ActivityWatc
 
 1. Go to the [Releases page](https://github.com/felixzsh/aw-nextblock/releases) on GitHub
 2. Download the ZIP file for your operating system:
-   - **Linux**: `aw-nextblock-linux.zip`
-   - **Windows**: `aw-nextblock-windows.zip`
-   - **macOS**: `aw-nextblock-macos.zip`
-
 3. Extract the downloaded ZIP file. You'll get:
-   - `aw-nextblock` binary executable
-   - `visualization/` folder
+    - `aw-nextblock` binary executable
+    - `visualization/` folder
 
 ### Install Binary
 
-4. Add the `aw-nextblock` binary to your system PATH:
-   - **Linux/macOS**: Copy to `/usr/local/bin/` or add to your `$PATH`
-   - **Windows**: Add to a directory in your `PATH` environment variable
+- Add the `aw-nextblock` binary to your system PATH:
+  - **Linux/macOS**: Copy to `/usr/local/bin/` or add to your `$PATH`
+  - **Windows**: Add to a directory in your `PATH` environment variable
 
 ### Autostart Watcher
 
@@ -164,45 +164,9 @@ Add `aw-nextblock` to the `autostart_modules` list:
 autostart_modules = ["aw-server", "aw-watcher-afk", "aw-watcher-window", "aw-nextblock"]
 ```
 
-### Optional: Setup Visualization (Experimental Feature)
-
-The visualization allows you to see your planned vs actual activity data in ActivityWatch's web UI. This is an **experimental feature** that requires manual configuration.
-
-5. Place the `visualization/` folder anywhere on your system (recommended: ActivityWatch config directory)
-6. Configure ActivityWatch to serve the visualization by adding this to your `aw-server.toml` config file:
-
-**Linux** (`~/.config/activitywatch/aw-server/aw-server.toml`):
-```toml
-[server.custom_static]
-aw-watcher-nextblock = "/path/to/your/visualization/folder/"
-```
-
-**Windows** (`%APPDATA%\activitywatch\aw-server\aw-server.toml`):
-```toml
-[server.custom_static]
-aw-watcher-nextblock = "C:\\path\\to\\your\\visualization\\folder\\"
-```
-
-**macOS** (`~/Library/Application Support/activitywatch/aw-server/aw-server.toml`):
-```toml
-[server.custom_static]
-aw-watcher-nextblock = "/path/to/your/visualization/folder/"
-```
-
-7. Restart ActivityWatch for the changes to take effect
-8. In ActivityWatch web UI, add a new Custom visualization
-9. When prompted for the watcher name, enter: `aw-watcher-nextblock`
-10. The visualization should now appear showing your planned vs actual activity data
-
 ### Watcher Configuration
 
-Create a `aw-watcher-nextblock.toml` file in the watcher's configuration directory:
-
-**Linux** (`~/.config/activitywatch/aw-watcher-nextblock/aw-watcher-nextblock.toml`)
-
-**Windows** (`%APPDATA%\activitywatch\aw-watcher-nextblock\aw-watcher-nextblock.toml`) 
-
-**macOS** (`~/Library/Application Support/activitywatch/aw-watcher-nextblock/aw-watcher-nextblock.toml`) 
+Create a `aw-watcher-nextblock/aw-watcher-nextblock.toml` file in the activitiwatch config directory
 
 Available configuration options:
 
@@ -223,6 +187,24 @@ notify_after_every_minutes = 5
 # Time scaling factor (only used for testing)
 time_scale_factor = 1
 ```
+
+### Optional: Setup Visualization
+
+The visualization allows you to see your planned vs actual activity data in ActivityWatch's web UI. This is an **experimental feature** that requires manual configuration.
+
+1. Place the `visualization/` folder anywhere on your system (recommended: ActivityWatch config directory)
+2. Configure ActivityWatch to serve the visualization by adding this to your `aw-server.toml` config file:
+
+```toml
+[server.custom_static]
+aw-watcher-nextblock = "/path/to/your/visualization/folder/"
+```
+
+3. Restart ActivityWatch for the changes to take effect
+4. In ActivityWatch web UI, add a new Custom visualization
+5. When prompted for the watcher name, enter: `aw-watcher-nextblock`
+6. The visualization should now appear showing your planned vs actual activity data
+
 ## Contributing
 
 Contributions welcome. Open an issue to discuss changes before submitting PRs.
